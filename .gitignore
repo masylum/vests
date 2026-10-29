@@ -6,3 +6,8 @@ native/build/
 
 # Local reports and tournament archives. Required test fixtures are already tracked.
 /docs/
+
+# Cloudflare generated assets and local runtime state.
+/dist/
+/.wrangler/
+/worker-configuration.d.ts

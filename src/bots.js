@@ -9,7 +9,7 @@ import {portfolioWealth,portfolioOptions} from './valuation.js';
 import {resolveSharePurchase,resolveRevealPhase,resolveIntelActions,shareholderReactions} from './racing.js';
 import {adaptiveBid, investmentCeiling, opponentBids, fundingNeed} from "./adaptive.js";
 import {choosePower} from "./racing.js";
-import { slotCards,currencyUnit,floorMoney,sharePayout, availableCash, minimumBid, settlementValue, fundedCards, fundingPrices, fundingBand, growthDeck, checkpointReached, podium } from "./config.js";
+import { slotCards,currencyUnit,floorMoney,sharePayout, availableCash, minimumBid, settlementValue, fundedCards, fundingPrices, fundingBand, growthDeck, checkpointReached, ipoFinisher, podium } from "./config.js";
 import {
   observation,
   currentPlayer,
@@ -161,8 +161,8 @@ function forecastResult(game,id=currentPlayer(game),{samples=20, auctionOutcome=
       }
     }
     w.pile=pile;w.founderUsed=clone(v.founderUsed??[]);w.purchaseSummary=[];deployReserves(w);w.burnEligible=pile.map(card=>card.id);mix(pile,rand);resolveRevealPhase(w,'start');
-    for(let draw=0;draw<v.rules.revealsPerRound&&pile.length;){const card=pile.shift();resolveCard(w,card);if(!w.lastRevealed?.deferred)draw++;}
-    returnGrowthCards(w);burnPile(w,rand);resolveRevealPhase(w,'end');resolveRevealPhase(w,'catchUp');
+    for(let draw=0;draw<v.rules.revealsPerRound&&pile.length;draw++){const card=pile.shift();resolveCard(w,card);}
+    returnGrowthCards(w);burnPile(w,rand);resolveRevealPhase(w,'end');resolveRevealPhase(w,'catchUp');w.ipoCompany=ipoFinisher(w);
     if(w.ipoCompany!=null||checkpointReached(w)||!pile.length&&candidates.length===0)break;
    }
    w.companies.forEach((c,i)=>{wholePaths[i].push(settlementValue(c,w.companies,v.rules));paths[i].push(locked?v.settlement.prices[i]:sharePayout(settlementValue(c,w.companies,v.rules),dilution(c),v.rules));});

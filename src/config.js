@@ -1,5 +1,5 @@
 import {compareRace} from './movement.js';
-export const VERSION = 96;
+export const VERSION = 97;
 export const REVEALS_PER_ROUND = 5;
 export const INVESTMENT_RISK_DISCOUNT = 0.25;
 export const FUNDS = [
@@ -32,7 +32,7 @@ export const COMPANIES = [
 export const FOUNDERS = [
  ["Stefan Hobbes", "Once per round", "When another company lands on my space, I **move 2**.", "✦"],
  ["Matt Sikaberg", "Before the reveal", "If I am **not leading**, I may **move 2, then fumble**.", "⚡"],
- ["Jess Bazos", "Before the reveal", "I may **swap spaces** with a company **1–3 spaces away**.", "▰"],
+ ["Jess Bazos", "Before the reveal", "I may **swap spaces** with a company **1 to 3 spaces away**.", "▰"],
  ["Gill Bates", "After the reveal", "I may **move another company 1**, then **move 1**.", "⊞"],
  ["Jenkins Wang", "At game end", "If I finish **penultimate**, my company may **exit for $75**.", "⌁"],
  ["Aidan Newman", "When a company fumbles", "I **move 1**.", "∞"],
@@ -45,7 +45,7 @@ export const FOUNDERS = [
  ["Max Bahnhof", "When I land on an occupied space", "I **move 1 more**.", "◎"],
  ["Zack Darcy", "Before the reveal", "I **move 1**.", "✴"],
  ["Mura Mirati", "Before the reveal", "I **deploy 1 card**.", "✹"],
- ["Lei-Lei Fi", "Before the reveal", "I may **pull a company 1–3 spaces away** to my space, then **fumble it**.", "◎"],
+ ["Lei-Lei Fi", "Before the reveal", "I may **pull a company 1 to 3 spaces away** to my space, then **fumble it**.", "◎"],
  ["Julie Hearts", "Once per reveal", "I may **use a revealed growth card as my company’s card**, including its power.", "⌂"],
  ["Melania Gherkins", "When a shareholder plays a value card on my company", "I **move 2**.", "≈"],
  ["Mack Ja", "Before the reveal", "I may **transfer 1 treasury slot** to another company, then **move 3**.", "⇄"],
@@ -75,7 +75,7 @@ export const RULES = Object.freeze({
   revealsPerRound: REVEALS_PER_ROUND,
   projectPrices: [[1,4,7],[3,6,9],[5,8,11]],
   startingCash: 50,
-  obligation: 60,
+  obligation: 55,
   purchaseStep: 4,
   defaultFee: 0,
   exitScale: 5,
@@ -144,7 +144,7 @@ export function growthDeck(company) {
 }
 
 export const checkpointTarget = g => g.leg === 2 ? 1 : g.rules.checkpointCount;
-export const checkpointReached = g => g.companies.filter(c=>c.position >= g.rules.checkpoints[g.leg]).length >= checkpointTarget(g);
+export const checkpointReached = g => g.companies.filter(c=>c.position >= g.rules.checkpoints[g.leg] && (g.leg!==2 || !c.down)).length >= checkpointTarget(g);
 
 // Economic founder powers share the same valuation in settlement and forecasts.
 export function settlementValue(c, companies, rules = RULES) {
@@ -169,3 +169,6 @@ export const floorMoney = (n,rules) => Math.floor(n/currencyUnit(rules))*currenc
 
 // Panels run left-to-right on top, then right-to-left along the bottom.
 export const companyOrder=companies=>{const split=Math.ceil(companies.length/2);return [...companies.slice(0,split),...companies.slice(split).reverse()].map(c=>c.id);};
+
+// IPO is confirmed only after every round effect has resolved.
+export const ipoFinisher = g => podium(g.companies.filter(c=>c.position>=g.rules.checkpoints.at(-1)&&!c.down),1)[0]??null;

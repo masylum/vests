@@ -1,7 +1,8 @@
+// Historical v96 rule expectations.
 import test from 'node:test';import assert from 'node:assert/strict';
-import {createGame,command,currentPlayer,assertGame,resolveCard} from '../src/engine.js';
-import {growthDeck,podium,RULES} from '../src/config.js';
-import {saleValue} from '../src/bots.js';
+import {createGame,command,currentPlayer,assertGame,resolveCard} from './reference-v96/engine.js';
+import {growthDeck,podium,RULES} from './reference-v96/config.js';
+import {saleValue} from './reference-v96/bots.js';
 const act=(g,c)=>command(g,currentPlayer(g),c);
 test('three to five investors only',()=>{for(const players of [3,4,5])assert.equal(createGame({players}).players.length,players);assert.throws(()=>createGame({players:6}),/3–5/);});
 test('decks vary from 16 to 21, with distinct blank growth counts and three signatures',()=>{const decks=Array.from({length:7},(_,i)=>growthDeck(i));assert.equal(Math.min(...decks.map(x=>x.length)),16);assert.equal(Math.max(...decks.map(x=>x.length)),21);for(const d of decks){assert.equal(d.filter(c=>!c.effect&&c.printed===0).length,[0,3,0,0,0,0,2][decks.indexOf(d)]);assert.equal(d.filter(c=>c.signature).length,decks.indexOf(d)===3?2:3);}});

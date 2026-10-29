@@ -10,7 +10,7 @@ for(let seed=42;seed<150&&wanted.size;seed++) {
  for(let n=0;!g.ended&&n<6000;n++) {
   const names={valueResult:'value-played',intelPlay:'value-choice',call:'call',bid:'bid',auctionResult:'receipt',purchaseResult:'purchase',reveal:'reveal',cycleResult:'checkpoint',settle:'settlement',founder:'founder'};
   if(names[g.phase])save(names[g.phase],seed,commands);
-  if(g.phase==='afterRevealReady'&&g.log.some(e=>e.type==='burn'&&e.cards?.length))save('public-burn',seed,commands);
+  if(['afterRevealReady','catchUpReady'].includes(g.phase)&&g.log.some(e=>e.type==='burn'&&e.cards?.length))save('public-burn',seed,commands);
   if(g.phase==='cycleResult'&&g.ipoCompany!=null)save('ipo-move',seed,commands);
   if(g.phase==='power'&&currentPlayer(g)!==0)save('ai-power',seed,commands);
   if(g.phase==='power'&&currentPlayer(g)===0){const q=g.powerChoice;save(q.founder===2?'power-swap':q.founder===1?'power-after':q.founder===9?'power-repair':'none',seed,commands);}

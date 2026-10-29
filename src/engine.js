@@ -4,7 +4,7 @@ import {INTEL_MODES,MAX_VALUE_HAND,canDrawIntel,canExchangeIntel,intelDeck,intel
 import {canHireFounder} from './config.js';
 import {canExit,dilution} from './config.js';
 import { REVEALS_PER_ROUND } from "./config.js";
-import {checkpointReached, podium} from './config.js';
+import {checkpointReached, podium, ipoFinisher} from './config.js';
 import { recordFounderMovement, sharePurchaseActions, resolveSharePurchase, shareholderReactions, resolveIntelActions, beginRace, resumeRace,resumePhase, resolveRevealPhase, markIPO } from "./racing.js";
 import {
   VERSION, currencyUnit,sharePayout, minimumBid, availableCash, fundingPrices, slotCards, reserveCards,
@@ -59,14 +59,14 @@ export const currentPlayer = (g) =>
   g.ended ? null : g.queue.length ? g.queue[0] : g.active;
 export function createGame({ seed = 42, players = 4, rules = {} } = {}) {
   check(
-    integer(seed, 0, 0xffffffff) && integer(players, 3, 5),
-    "Choose 3–5 investors and a whole seed.",
+    integer(seed, 0, 0xffffffff) && integer(players, 2, 5),
+    "Choose 2 to 5 investors and a whole seed.",
   );
   check(
     Object.keys(rules).every((k) => ["exitMultiplier", "currencyUnit", "bridgeCost", "secondaryCost", "conflictPayout", "sellPayouts", "intelMode", "burnPerRound", "moneyScale", "muraMinimum", "wangExit", "catchUp", "purchaseStep", "exitScale", "defaultFee", "purchaseBase", "exitLinear", "exitCurve", "ipoValue", "growthDivisor", "checkpointCount", "costAcceleration", "payoutPlaces", "startingCash", "obligation", "projectPrices", "hedgeFund", "revealsPerRound"].includes(k)),
     "Unknown experimental rule.",
   );
-  const r = clone({ ...RULES, burnPerRound:players-1, ...rules });
+  const r = clone({ ...RULES, burnPerRound:players-1, payoutPlaces:Math.floor((players+2)/2), ...rules });
   check(r.currencyUnit===1,'Invalid currency unit.');
   check(integer(r.secondaryCost,0,100)&&integer(r.bridgeCost,0,100)&&integer(r.conflictPayout,0,100)&&Array.isArray(r.sellPayouts)&&r.sellPayouts.length===3&&r.sellPayouts.every(n=>integer(n,0,100)),'Invalid value-card cash settings.');
   check(Object.hasOwn(INTEL_MODES,r.intelMode), "Invalid intel mode.");
@@ -361,8 +361,8 @@ export function resolveCard(g, card, {interactive = false} = {}) {
 function drawNext(g) {
   while(g.pile.length&&g.drawsLeft){
     const card=g.pile.shift(),c=g.companies[card.company];
-    g.pendingRedraw=!!c.down&&card.signature!=="recover";
-    if(!g.pendingRedraw)g.drawsLeft--;
+    g.pendingRedraw=false;
+    g.drawsLeft--;
     resolveCard(g,card,{interactive:true});
     return; // One shown card per click, including a fumble discard.
   }
@@ -370,11 +370,12 @@ function drawNext(g) {
 }
 function checkRevealEnd(g) {
   if (g.race) return;
-  if(!g.revealEnded&&g.pendingRedraw&&g.pile.length)return;
   if (!g.revealEnded && (!g.drawsLeft || !g.pile.length)) {
     returnGrowthCards(g);
     if(!g.pileBurned){burnPile(g);g.pileBurned=true;}
-    g.phase='afterRevealReady';g.queue=[];g.active=g.first;return;
+    g.queue=[];g.active=g.first;
+    if(g.companies.some(c=>c.founder===3&&!c.down&&!c.hiringFumble&&lead(c)!==null)){g.phase='afterRevealReady';return;}
+    g.revealEnded=true;
   }
   if(g.revealEnded&&g.rules.catchUp){g.phase=g.catchUpDone?'catchUpResult':'catchUpReady';g.queue=[];g.active=g.first;return;}
   if (g.revealEnded && (g.ipoCompany!=null || checkpointReached(g))) finishCycle(g,"checkpoint");
@@ -415,7 +416,8 @@ export function burnPile(g,rand=()=>random(g)) {
 function finishCycle(g, reason) {
   for(const p of g.players)p.locked=0;
   g.drawsLeft=0;
-  if(g.ipoCompany!=null){reason="ipo";g.ipoCompany=podium(g.companies,1)[0];}
+  g.ipoCompany=ipoFinisher(g);
+  if(g.ipoCompany!=null)reason="ipo";
   g.cycleEnd = reason;
   g.first = (g.first + 1) % g.players.length;
   g.queue = [];
@@ -424,8 +426,8 @@ function finishCycle(g, reason) {
   emit(g, { type: "carry", reason, count: g.pile.length });
 }
 function beginSettlement(g) {
-  g.finalExit = g.ipoCompany!=null||g.companies.some(c=>c.position>=24);
-  if(g.finalExit)g.ipoCompany=podium(g.companies,1)[0];
+  g.ipoCompany=ipoFinisher(g);
+  g.finalExit = g.ipoCompany!=null;
   const winners = podium(g.companies,g.rules.payoutPlaces);
   g.settlement = {
     leg: g.leg,

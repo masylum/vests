@@ -22,8 +22,7 @@ function offer(g,company,text,options,player=controller(g,company),mandatory=fal
     beforeReveal:!g.race.revealed,mandatory,options:mandatory?options:[option('Pass'),...options]};
 }
 export function markIPO(g,company) {
- if(g.ipoCompany==null&&g.companies[company].position>=g.rules.checkpoints.at(-1)){g.ipoCompany=company;g.ipoTrigger=company;}
- return g.ipoCompany!=null;
+ if(g.companies[company].position>=g.rules.checkpoints.at(-1))g.ipoTrigger??=company;
 }
 function reactions(g,moves) {
   for(const m of moves) {

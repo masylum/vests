@@ -22,7 +22,7 @@ export function makeServer(root = process.cwd()) {
       try{
         let body='';for await(const chunk of req){body+=chunk;if(Buffer.byteLength(body)>512*1024){res.writeHead(413).end('Request too large');return;}}
         const {game,id}=JSON.parse(body),players=game?.players?.length;
-        if(!Number.isInteger(id)||players<3||players>5||id<0||id>=players||game.playerId!==id||game.companies?.length!==players+2||game.rules?.maxCycles>36)throw Error('Invalid public bot observation');
+        if(!Number.isInteger(id)||players<2||players>5||id<0||id>=players||game.playerId!==id||game.companies?.length!==players+2||game.rules?.maxCycles>36)throw Error('Invalid public bot observation');
         const cmd=botCommand(game,id,{samples:24,policy:'adaptive'});
         res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-store'}).end(JSON.stringify({cmd,accelerated:nativeForecastAvailable}));
       }catch{res.writeHead(400).end('Invalid bot observation');}

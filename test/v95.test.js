@@ -1,7 +1,8 @@
+// Historical v96 rules. Current changes are tested in v97.test.js.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {simulate} from '../simulate.js';
-import {replayGame} from '../src/engine.js';
+import {simulate} from './reference-v96/simulate.js';
+import {replayGame} from './reference-v96/engine.js';
 
 test('each LP owes 60 at settlement and reduces the same replay score by 5 per LP versus 55',()=>{
  const game=simulate({seed:950001,players:4,samples:2,rules:{intelMode:'mixed'},trace:true});

@@ -11,5 +11,5 @@ test('companies start on space 1 without consuming an opening card',()=>{
 test('movement telemetry attributes actual clamped movement to the source founder',()=>{
  const g=createGame();g.companies.forEach(c=>c.down=true);const c=g.companies[0];c.position=23;
  resolveIntelActions(g,[{kind:'move',company:0,amount:3,source:1}]);
- assert.deepEqual(g.metrics.founderMovement[g.companies[1].founder],{forward:1,backward:0});assert.equal(g.ipoCompany,0);
+ assert.deepEqual(g.metrics.founderMovement[g.companies[1].founder],{forward:1,backward:0});assert.equal(g.ipoCompany??null,null);assert.equal(g.ipoTrigger,0);
 });

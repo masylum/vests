@@ -540,9 +540,6 @@ impl State {
             .clamp(0, self.r.cp[2]);
             self.c[a.c].pos=self.destination(a.c,before,destination);
             moves.push((a.c, before, self.c[a.c].pos));
-            if self.ipo < 0 && self.c[a.c].pos >= self.r.cp[2] {
-                self.ipo = a.c as i32;
-            }
         }
         let mut changed: Vec<_> = moves.iter().copied().filter(|m| m.1 != m.2).collect();
         changed.sort_by(|a, b| {
@@ -765,9 +762,6 @@ impl State {
                     if to != before {
                         self.serial += 1;
                         self.c[id].arrival = self.serial;
-                    }
-                    if self.ipo < 0 && to >= self.r.cp[2] {
-                        self.ipo = id as i32;
                     }
                     self.front([Action::new(Kind::After,id),Action::new(Kind::ReidOffer,self.physical.c)]);
                     self.reactions(&[(id, before, to)]);
@@ -1327,9 +1321,7 @@ fn simulate(input: &Input) -> Vec<f64> {
                     while draw < s.r.draws && !s.pile.is_empty() {
                         let k = s.pile.remove(0);
                         s.reveal(k);
-                        if !s.deferred {
-                            draw += 1;
-                        }
+                        draw += 1;
                     }
                     for k in s.returning.drain(..) {
                         s.c[k.c].supply.push(k);
@@ -1353,7 +1345,8 @@ fn simulate(input: &Input) -> Vec<f64> {
                     if s.r.catchup {
                         s.phase(3);
                     }
-                    let crossed = s.c.iter().filter(|x| x.pos >= s.r.cp[leg]).count() as i32;
+                    s.ipo = s.c.iter().filter(|x| x.pos >= s.r.cp[2] && !x.down).min_by(|a,b| a.arrival.cmp(&b.arrival).then(a.id.cmp(&b.id))).map_or(-1, |x| x.id as i32);
+                    let crossed = s.c.iter().filter(|x| x.pos >= s.r.cp[leg] && (leg != 2 || !x.down)).count() as i32;
                     if s.ipo >= 0
                         || crossed >= if leg == 2 { 1 } else { s.r.checkpoint_count }
                         || (s.pile.is_empty() && candidates.is_empty())

@@ -1,8 +1,9 @@
+// Historical v96 rule expectations.
 import test from 'node:test';import assert from 'node:assert/strict';
-import {createGame,resolveCard,command,currentPlayer,lead} from '../src/engine.js';
-import {COMPANIES,growthDeck,podium,raceRank} from '../src/config.js';
-import {resolveRevealPhase,resolveIntelActions} from '../src/racing.js';
-import {botCommand} from '../src/bots.js';
+import {createGame,resolveCard,command,currentPlayer,lead} from './reference-v96/engine.js';
+import {COMPANIES,growthDeck,podium,raceRank} from './reference-v96/config.js';
+import {resolveRevealPhase,resolveIntelActions} from './reference-v96/racing.js';
+import {botCommand} from './reference-v96/bots.js';
 const act=(g,cmd)=>command(g,currentPlayer(g),cmd);
 function race(positions){const g=createGame({seed:42});g.fast=true;g.companies.forEach((c,i)=>{c.position=positions[i]??1;c.founder=-1;});return g;}
 const card=(company,printed=1)=>({kind:'growth',company,id:`test${company}`,printed});

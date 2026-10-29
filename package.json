@@ -1,6 +1,6 @@
 {
   "name": "vests",
-  "version": "96.0.0",
+  "version": "97.0.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -14,6 +14,11 @@
     "balance": "node scripts/balance-study.js",
     "balance:report": "node scripts/money-report.js",
     "benchmark": "node scripts/benchmark.js",
-    "native:build": "node scripts/build-native.js"
+    "native:build": "node scripts/build-native.js",
+    "build:cloudflare": "node scripts/build-cloudflare.js",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.155.0"
   }
 }

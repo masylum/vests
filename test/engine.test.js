@@ -8,9 +8,9 @@ import {simulate} from '../simulate.js';
 function act(g,cmd){command(g,currentPlayer(g),cmd);assertGame(g)}
 function bids(g,amounts){while(g.phase==='bid')act(g,{type:'bid',amount:amounts[currentPlayer(g)]});}
 function through(g,phase){for(let i=0;g.phase!==phase&&i<1000;i++){if(g.phase==='call')act(g,{type:'call',company:null});else if(g.phase==='founder')act(g,{type:'founder',choice:-1});else act(g,{type:'continue'});}assert.equal(g.phase,phase)}
-test('3–5 players receive fixed public pockets/obligations; no Market decks or private hands',()=>{
- for(const players of [3,4,5]){const g=createGame({players});assertGame(g);assert.equal(g.phase,'call');assert.equal(g.companies.length,players+2);assert.equal(g.pile.length,players+2);for(const c of g.companies)assert.equal(g.pile.filter(card=>card.company===c.id).length,1);assert.equal(g.marketDraw,undefined);assert(g.players.every(p=>p.cash===40&&p.obligation===46&&!p.hand&&!p.offers));assert.equal(new Set(g.companies.map(c=>c.founder)).size,g.companies.length);}
- assert.throws(()=>createGame({players:2}));assert.throws(()=>createGame({seed:-1}));
+test('2 to 5 players receive fixed public pockets/obligations; no Market decks or private hands',()=>{
+ for(const players of [2,3,4,5]){const g=createGame({players});assertGame(g);assert.equal(g.phase,'call');assert.equal(g.companies.length,players+2);assert.equal(g.pile.length,players+2);for(const c of g.companies)assert.equal(g.pile.filter(card=>card.company===c.id).length,1);assert.equal(g.marketDraw,undefined);assert(g.players.every(p=>p.cash===40&&p.obligation===46&&!p.hand&&!p.offers));assert.equal(new Set(g.companies.map(c=>c.founder)).size,g.companies.length);}
+ assert.throws(()=>createGame({players:1}));assert.throws(()=>createGame({seed:-1}));
 });
 test('companies start on space 1 without an opening deal',()=>{
  const g=createGame();for(const c of g.companies){assert.equal(c.position,1);assert.equal(c.supply.length,growthDeck(c.id).length-1);assert.equal(c.purchased,0);assert.equal(c.treasury,undefined);assert.equal(c.openingCard,null);}assert.equal(g.metrics.purchased,0);
@@ -76,9 +76,9 @@ test('race has three eight-space bands and at most five issued shares',()=>{
 });
 
 test('browser fixtures are legal current-version states, including hidden founder prompts',()=>{
- const phases={'public-burn':'afterRevealReady','melania-value':'valueResult','ryan-target':'phaseResult','ipo-move':'cycleResult','value-played':'valueResult','value-choice':'intelPlay',jerry:'bid',call:'call',bid:'bid',receipt:'auctionResult',purchase:'purchaseResult',reveal:'reveal',checkpoint:'cycleResult',settlement:'settle',founder:'founder',tie:'tie','power-swap':'power','power-after':'power','power-repair':'power',fumble:'reveal'};
+ const phases={'public-burn':['afterRevealReady','catchUpReady'],'melania-value':'valueResult','ryan-target':'phaseResult','ipo-move':'cycleResult','value-played':'valueResult','value-choice':'intelPlay',jerry:'bid',call:'call',bid:'bid',receipt:'auctionResult',purchase:'purchaseResult',reveal:'reveal',checkpoint:'cycleResult',settlement:'settle',founder:'founder',tie:'tie','power-swap':'power','power-after':'power','power-repair':'power',fumble:'reveal'};
  for(const [name,phase] of Object.entries(phases)){
-  const g=replayGame(JSON.parse(fs.readFileSync(new URL(`./fixtures/${name}.json`,import.meta.url))));assert.equal(g.phase,phase,name);assertGame(g);
+  const g=replayGame(JSON.parse(fs.readFileSync(new URL(`./fixtures/${name}.json`,import.meta.url))));assert((Array.isArray(phase)?phase:[phase]).includes(g.phase),`${name}: ${g.phase}`);assertGame(g);
 
  }
 });
@@ -153,14 +153,14 @@ test('an uncontested all-in bidder pays the entire offer, while a rival sets sec
  }
 });
 
-test('fumbled cards are discarded without consuming any of the six reveal slots',()=>{
+test('fumbled cards consume a draw without a replacement',()=>{
  const g=createGame();g.companies.forEach(c=>{c.founder=-1;c.position=1;});g.queue=[];g.phase='reveal';g.active=0;
  const take=cid=>{const c=g.companies[cid],i=c.supply.findIndex(x=>!x.effect&&!x.signature);return c.supply.splice(i,1)[0];};
  g.pile=[take(0),take(1),take(2),take(3),take(4),take(5),take(1)];
  const deferred=g.pile[0];g.companies[0].down=true;g.drawsLeft=6;const before=g.metrics.revealed;
- command(g,0,{type:'reveal'});assert.equal(g.drawsLeft,6);assert.equal(g.lastRevealed.card.id,deferred.id);assert.equal(g.metrics.revealed,before);assert(!g.companies[0].down);assert(g.removed.some(x=>x.id===deferred.id&&x.discarded));assert.equal(g.metrics.deferred,1);
+ command(g,0,{type:'reveal'});assert.equal(g.drawsLeft,5);assert.equal(g.lastRevealed.card.id,deferred.id);assert.equal(g.metrics.revealed,before);assert(!g.companies[0].down);assert(g.removed.some(x=>x.id===deferred.id&&x.discarded));assert.equal(g.metrics.deferred,1);
  while(g.phase==='reveal')command(g,currentPlayer(g),{type:'reveal'});
- assert.equal(g.metrics.revealed-before,6);assert.equal(g.pile.length,0);assert(g.companies[0].history.some(x=>x.id===deferred.id));assert.equal(g.metrics.wasted,1);
+ assert.equal(g.metrics.revealed-before,5);assert.equal(g.pile.length,1);assert(g.companies[0].history.some(x=>x.id===deferred.id));assert.equal(g.metrics.wasted,1);
 });
 
 test('discard recovery stops safely when no replacement remains in the shared pile',()=>{

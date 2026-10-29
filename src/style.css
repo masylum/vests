@@ -1,7 +1,7 @@
 @import url("/assets/fonts/fonts.css");
 :root {
   font-synthesis:none;
-  font:14px 'Poppins',Arial,sans-serif;
+  font:14px 'Outfit',Arial,sans-serif;
   color:#443c2d;
   background:#fff;
   --paper:#fffbee;
@@ -19,7 +19,7 @@ h1,h2,h3,p {
   margin:0;
 }
 h2,h3 {
-  font-family:'Poppins',sans-serif;
+  font-family:'Outfit',sans-serif;
 }
 h2 {
   font-size:23px;
@@ -102,7 +102,7 @@ nav,form,.title,.top,.status {
   color:#b76f4f;
 }
 .top h1 small {
-  font:700 11px 'Poppins';
+  font:700 11px 'Outfit';
   letter-spacing:3px;
   margin-left:15px;
 }
@@ -151,8 +151,8 @@ em {
 }
 .coin {
   display:inline-flex;
-  background:#fff;
-  color:#a5690c;
+  background:#fff1b6;
+  color:#111;
   border:1px solid #c48a24;
   border-radius:30px;
   padding:3px 8px;
@@ -1124,7 +1124,7 @@ h1 {
   font-size:13px;
 }
 h1,.company h3 {
-  font-family:'Poppins',Arial,sans-serif;
+  font-family:'Outfit',Arial,sans-serif;
   font-weight:700;
 }
 .table-top {
@@ -1598,7 +1598,7 @@ h1,.company h3 {
 
 .decision { max-height:65vh; }
 
-.top h1 { font-family:'Fruktur',serif; font-size:76px; font-weight:400; line-height:1.05; color:#fff; -webkit-text-stroke:7px #000; paint-order:stroke fill; letter-spacing:1px; margin:4px 12px 10px 0; }
+.top h1 { font-family:'Outfit',serif; font-size:76px; font-weight:400; line-height:1.05; color:#fff; -webkit-text-stroke:7px #000; paint-order:stroke fill; letter-spacing:1px; margin:4px 12px 10px 0; }
 .funding-strip .funding-band { border:0; }
 .shareholders .share.your-share { background:#ffdf62; }
 .shareholders .share.hedge-share { background:#000; color:#fff; }
@@ -2004,7 +2004,7 @@ body { padding:8px; }
 
 
 /* A stable drawer reserves the same space in every phase. */
-#app { --drawer-height:min(300px,36dvh); }
+#app { --drawer-height:min(320px,39dvh); }
 #app>.decision,#app>.decision:has(.reaction-timeline,.power-prompt,.value-receipt,.intel-choice,.founder-options) { height:var(--drawer-height); min-height:var(--drawer-height); max-height:var(--drawer-height); flex:0 0 var(--drawer-height); padding:14px 18px 12px; gap:10px; box-sizing:border-box; }
 .decision-content { flex:1 1 0; min-height:0; }
 .decision .decision-content>h2,.decision .decision-content>.title { margin:0 0 14px; }
@@ -2091,7 +2091,7 @@ body { padding:8px; }
 
 /* Rulebook spreads: continuous text, open illustrations and numbered chapters. */
 #app .decision.game-over { border-color:transparent; box-shadow:none; }
-dialog.rules-guide { width:min(1160px,calc(100vw - 32px)); max-width:none; height:min(740px,calc(100dvh - 32px)); max-height:none; display:flex; flex-direction:column; gap:16px; padding:24px 32px; overflow:visible; background:#fffcf3; color:#222; }
+dialog.rules-guide { width:min(1160px,calc(100vw - 32px)); max-width:none; height:min(900px,calc(100dvh - 32px)); max-height:none; display:flex; flex-direction:column; gap:16px; padding:24px 32px; overflow:visible; background:#fff; color:#111; }
 .rules-guide>header { flex:none; margin:0; }
 .rules-guide>header h2 { font-size:22px; }
 .rules-tabs { display:flex; gap:20px; flex:none; border-bottom:1px solid #cfc7b8; }
@@ -2099,20 +2099,22 @@ dialog.rules-guide { width:min(1160px,calc(100vw - 32px)); max-width:none; heigh
 .rules-tabs button[aria-current="page"] { background:transparent; color:#111; border-bottom:3px solid #111; font-weight:700; margin-bottom:-1px; }
 .rules-page { flex:1; min-height:0; display:flex; flex-direction:column; gap:16px; }
 .rulebook-heading { display:flex; align-items:baseline; gap:16px; margin:0; }
-.rulebook-heading>span { font-family:Georgia,serif; font-size:46px; font-style:italic; color:#a28a62; line-height:1; }
+.rulebook-heading>span { font-family:'Outfit',sans-serif; font-size:46px; font-style:italic; color:#a28a62; line-height:1; }
 .rulebook-heading h2 { font-size:31px; font-weight:700; line-height:1.15; margin:0; }
-.rulebook-spread { display:grid; grid-template-columns:minmax(0,1.55fr) minmax(0,1fr); gap:52px; flex:1; min-height:0; }
-.rulebook-text { font:15.5px/1.45 Georgia,'Times New Roman',serif; }
+.rulebook-spread { display:grid; grid-template-columns:minmax(0,1.9fr) minmax(0,1fr); gap:40px; flex:1; min-height:0; }
+.rulebook-text { font:14.5px/1.4 'Outfit',sans-serif; }
 .rulebook-text p { margin:0 0 8px; }
 .rulebook-text p:last-child { margin-bottom:0; }
 .rulebook-text .rulebook-lead { font-size:18px; line-height:1.35; margin-bottom:16px; }
-.rulebook-text h3 { font:700 13px/1.3 'Poppins',sans-serif; margin:15px 0 5px; }
-.rulebook-text .coin { font:700 13px/1.1 'Poppins',sans-serif; padding:2px 6px; }
+.rulebook-text h3 { font:700 16px/1.3 'Outfit',sans-serif; margin:21px 0 8px; }
+.rulebook-text .coin { font:700 13px/1.1 'Outfit',sans-serif; padding:2px 6px; }
 .rulebook-art { display:flex; flex-direction:column; justify-content:center; gap:24px; min-width:0; padding:0 4px; }
-.rulebook-art figure { margin:0; }
+.rulebook-art figure { margin:0; padding:14px; border:0; border-radius:8px; background:#edf3fc; }
+.rulebook-art figure:nth-child(2n) { background:#f3edf9; }
+.rulebook-art figure:nth-child(3n) { background:#edf6ef; }
 .rulebook-illustration { display:flex; align-items:center; flex-wrap:wrap; justify-content:center; gap:14px; min-height:50px; padding:10px 0; }
-.rulebook-art figcaption { font:12px/1.5 'Poppins',sans-serif; color:#6b6357; margin:8px auto 0; max-width:340px; }
-.rule-pawn { background:var(--company); border:2px solid #111; border-radius:50%; min-width:36px; height:30px; display:inline-flex; justify-content:center; align-items:center; font:800 12px/1 'Poppins',sans-serif; box-shadow:0 4px 0 var(--company),0 6px 0 #111; }
+.rulebook-art figcaption { font:12px/1.5 'Outfit',sans-serif; color:#6b6357; margin:8px auto 0; max-width:340px; }
+.rule-pawn { background:var(--company); border:2px solid #111; border-radius:50%; min-width:36px; height:30px; display:inline-flex; justify-content:center; align-items:center; font:800 12px/1 'Outfit',sans-serif; box-shadow:0 4px 0 var(--company),0 6px 0 #111; }
 .rule-arrow { font-size:25px; font-weight:600; }
 .rule-lp { border:1.5px solid #111; background:white; padding:8px 12px; text-align:center; font-size:13px; line-height:1.4; }
 .rulebook-illustration>img { width:100px; height:62px; object-fit:cover; }
@@ -2120,8 +2122,8 @@ dialog.rules-guide { width:min(1160px,calc(100vw - 32px)); max-width:none; heigh
 .rulebook-illustration>.rule-value-example { width:140px; height:80px; }
 .rulebook-illustration .share { font-size:11px; padding:4px 0; background:transparent; border:0; }
 .rule-pass { font-size:17px; }
-.rule-hand-limit { font:bold 40px/1 Georgia,serif; text-align:center; }
-.rule-hand-limit small { font:12px/1.5 'Poppins',sans-serif; }
+.rule-hand-limit { font:bold 40px/1 'Outfit',sans-serif; text-align:center; }
+.rule-hand-limit small { font:12px/1.5 'Outfit',sans-serif; }
 .rulebook-prices { border-collapse:collapse; width:100%; font-size:13px; }
 .rulebook-prices caption { text-align:left; font-weight:600; margin-bottom:10px; }
 .rulebook-prices th,.rulebook-prices td { text-align:center; padding:10px 4px; border-bottom:1px solid #d7cebd; }
@@ -2141,12 +2143,12 @@ dialog.rules-guide { width:min(1160px,calc(100vw - 32px)); max-width:none; heigh
 .rule-track { display:flex; align-items:center; gap:8px; }
 .rule-track>span { font-size:14px; font-weight:700; }
 .rule-track>div { display:flex; gap:7px; border-bottom:1px solid #a79c88; padding:8px 5px 15px; }
-.rulebook-equation { font:22px/1.6 Georgia,serif; margin:0 auto; }
+.rulebook-equation { font:22px/1.6 'Outfit',sans-serif; margin:0 auto; }
 .rulebook-equation strong { display:block; border-top:1px solid #a79c88; margin-top:5px; font-size:23px; }
 .rules-paging { flex:none; display:flex; justify-content:space-between; align-items:center; padding-top:8px; border-top:1px solid #cfc7b8; }
-.rules-paging span { font:italic 15px Georgia,serif; color:#776c5c; }
+.rules-paging span { font:italic 15px 'Outfit',sans-serif; color:#776c5c; }
 .rules-paging button { padding:6px 0; font-size:13px; border:0; box-shadow:none; background:transparent; }
-@media(max-height:700px) { dialog.rules-guide { gap:12px; padding:18px 26px; }.rules-page { gap:12px; }.rulebook-heading>span { font-size:38px; }.rulebook-heading h2 { font-size:27px; }.rulebook-text { font-size:14px; line-height:1.4; }.rulebook-text h3 { margin-top:11px; }.rulebook-text .rulebook-lead { font-size:16px; margin-bottom:12px; }.rulebook-art { gap:18px; } }
+@media(max-height:760px) { dialog.rules-guide { gap:12px; padding:18px 26px; }.rules-page { gap:12px; }.rulebook-heading>span { font-size:38px; }.rulebook-heading h2 { font-size:27px; }.rulebook-text { font-size:14px; line-height:1.4; }.rulebook-text h3 { margin-top:11px; }.rulebook-text .rulebook-lead { font-size:16px; margin-bottom:12px; }.rulebook-art { gap:18px; } }
 @media(max-width:1000px) { dialog.rules-guide { padding:18px 24px; }.rules-tabs { gap:10px; }.rules-tabs button { font-size:10px; }.rulebook-spread { gap:25px; grid-template-columns:minmax(0,1.5fr) minmax(0,1fr); }.rulebook-text { font-size:14px; }.rulebook-art figcaption { font-size:11px; }.rulebook-illustration { gap:10px; }.rule-order { gap:12px; } }
 
 /* One inspected row per page keeps the private growth-pile choice inside the drawer. */
@@ -2179,3 +2181,50 @@ dialog.founder-guide { width:min(1000px,calc(100vw - 32px)); max-width:none; max
 #app .decision .inspection-discards .growth-card>strong { position:static; transform:none; font-size:25px; line-height:1; }
 #app .decision .inspection-discards .growth-card>small { font-size:11px; line-height:1.15; padding:3px; }
 #app .decision .scout-cards .growth-card { height:92px; min-height:92px; }
+
+/* v97 rulebook and decision refinements. */
+.rulebook-art { gap:16px; }
+.rulebook-art figure { padding:12px; }
+.rulebook-art figcaption { font-size:11px; line-height:1.4; margin-top:6px; }
+.rulebook-illustration { padding:6px 0; min-height:40px; gap:10px; }
+.rulebook-prices { display:grid; gap:10px; }
+.price-band { border:0; border-radius:8px; padding:12px; }
+.price-band h3 { margin:0 0 9px; font-size:15px; display:flex; justify-content:space-between; align-items:center; }
+.price-band h3 small { font-size:11px; font-weight:400; }
+.price-band>div { display:flex; justify-content:space-between; gap:8px; }
+.price-option { display:flex; flex-direction:column; align-items:center; gap:5px; }
+.price-option small { font-size:11px; }
+.rule-order { gap:9px; }
+.rule-order span { padding:8px 5px; border-radius:5px; color:#111; font-size:11px; text-align:center; font-weight:600; }
+#app .decision .bid-explainer { margin-bottom:22px; }
+#app .decision form#bid label { display:flex; flex-direction:column; align-items:flex-start; gap:9px; font-size:16px; }
+#app .decision form#bid input { width:210px; height:57px; padding:8px 14px; font:700 28px/1 'Outfit',sans-serif; }
+#app .decision .title:has(+.reveal-card) { margin-bottom:20px; }
+#app .decision .value-receipt { gap:24px; margin-top:16px; }
+#app .decision .supply-change { min-width:190px; padding:4px; }
+.supply-change>b { color:var(--company); font-size:16px; }
+.supply-change>div { display:flex; align-items:center; gap:20px; padding:10px 0; }
+.supply-stack { width:58px; height:62px; position:relative; display:inline-flex; align-items:center; justify-content:center; }
+.supply-stack i { position:absolute; inset:0 5px 7px 0; border:2px solid #111; border-radius:5px; background:repeating-linear-gradient(45deg,var(--company),var(--company) 5px,color-mix(in srgb,var(--company),white 40%) 5px,color-mix(in srgb,var(--company),white 40%) 8px); }
+.supply-stack i:nth-child(2) { transform:translate(3px,3px); }
+.supply-stack i:nth-child(3) { transform:translate(6px,6px); }
+.supply-stack strong { position:relative; z-index:1; background:white; border-radius:50%; padding:3px 7px; min-width:30px; text-align:center; font-size:18px; }
+.supply-change>small { font-size:12px; }
+@media(max-width:1000px) { .rulebook-spread { grid-template-columns:minmax(0,1.9fr) minmax(0,1fr); gap:22px; }.rulebook-text h3 { font-size:15px; margin:17px 0 7px; } }
+
+.price-band.band-0 { background:#e6f1fa; }
+.price-band.band-1 { background:#e8f3e5; }
+.price-band.band-2 { background:#f8e7ef; }
+
+/* Space separates rule sections and value choices without enlarging the tokens. */
+.rules-guide .rulebook-text h3 { margin:32px 0 12px; }
+.rules-guide .rulebook-text p { margin-bottom:12px; }
+.auction-receipt h2 .coin { font-size:18px; line-height:1.2; padding:3px 8px; vertical-align:middle; }
+.auction-receipt .bids strong .coin { font-size:16px; line-height:1.2; padding:3px 8px; }
+#app .decision.intel-decision .intel-cards { margin-top:10px; }
+#app .decision.intel-decision .intel-choice { gap:16px; }
+@media(max-height:820px) {
+ .rules-guide .rulebook-text h3 { margin:24px 0 9px; }
+ .rules-guide .rulebook-text p { margin-bottom:10px; }
+}
+@media(min-height:900px) { .rules-guide .rulebook-text h3 { margin-top:40px; } }

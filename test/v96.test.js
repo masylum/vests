@@ -1,9 +1,10 @@
+// Historical v96 rules. Current changes are tested in v97.test.js.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createGame,resolveCard,resolveCardBase,command,currentPlayer,observation,assertGame,clone,burnPile} from '../src/engine.js';
-import {resolveRevealPhase,resumeRace,resolveSharePurchase,resolveIntelActions,choosePower} from '../src/racing.js';
-import {FOUNDERS,canExit,settlementValue,growthDeck} from '../src/config.js';
-import {botCommand} from '../src/bots.js';
+import {createGame,resolveCard,resolveCardBase,command,currentPlayer,observation,assertGame,clone,burnPile} from './reference-v96/engine.js';
+import {resolveRevealPhase,resumeRace,resolveSharePurchase,resolveIntelActions,choosePower} from './reference-v96/racing.js';
+import {FOUNDERS,canExit,settlementValue,growthDeck} from './reference-v96/config.js';
+import {botCommand} from './reference-v96/bots.js';
 const act=(g,cmd)=>command(g,currentPlayer(g),cmd);
 function setup(assign={}){
  const g=createGame({seed:96123,rules:{intelMode:'mixed'}}),chosen=new Set(Object.values(assign));
