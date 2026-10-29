@@ -2228,3 +2228,6 @@ dialog.founder-guide { width:min(1000px,calc(100vw - 32px)); max-width:none; max
  .rules-guide .rulebook-text p { margin-bottom:10px; }
 }
 @media(min-height:900px) { .rules-guide .rulebook-text h3 { margin-top:40px; } }
+
+#app>.top { margin:0 auto 14px; }
+#app>.top .brand h1 { font-family:'Fruktur',serif; }

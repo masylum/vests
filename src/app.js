@@ -382,7 +382,10 @@ function sizeCards(){
 function alignDrawer(){
  sizeCards();
  const scene=document.querySelector('.game-layout'),panel=document.querySelector('.decision'),table=document.querySelector('.tabletop');if(!scene||!panel||!table)return;
- const width=Math.max(1800,table.clientWidth-16);
+ // Keep the side cards beside the board instead of spreading across wide monitors.
+ const sideWidth=scene.querySelector('.founder-market').offsetWidth;
+ const sidebarCount=scene.querySelectorAll('.intel-hand,.founder-market').length;
+ const width=Math.max(1800,Math.min(1480+sidebarCount*(sideWidth+20),table.clientWidth-16));
  scene.style.width=`${width}px`;
  const board=scene.querySelector('.board'),centre=board.querySelector('.centre');
  // The SVG lane's inner edge is 11.5% from the top/bottom and 7.2% from either side.
@@ -392,6 +395,8 @@ function alignDrawer(){
  panel.style.marginLeft='auto';panel.style.marginRight='auto';
  const scale=Math.min(1,(table.clientWidth-16)/width,(table.clientHeight-12)/Math.max(1,scene.scrollHeight));
  scene.style.transform=`translateX(-50%) scale(${Math.max(.1,scale)})`;
+ const header=root.querySelector('.top');
+ header.style.width=`${Math.min(root.clientWidth,Math.max(1200,width*scale))}px`;
 }
 const layoutObserver=new ResizeObserver(alignDrawer);
 function render() {
