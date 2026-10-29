@@ -115,14 +115,14 @@ export const DECK_PROFILES = [
  [2,8,7,0,1,0], [2,10,7,0,1,0],
 ];
 export const DECK_THEMES = [
- ["Steady cash flow", "Gogol is a low-risk cash cow: mostly +1 cards, some +2s and one fumble. Ad revenue deploys extra supply, trading stock for steady momentum."],
- ["Efficient reinvestment", "Amazin is the slowest company, mostly +1s, with three zeros and no fumbles. Reinvest profits refills its efficient treasury; its large supply rewards patient funding."],
- ["Move fast, break things", "Weta has many +2s and three fumbles. Pivot recovers and moves in the same draw. Fast growth comes with interruptions when a recovery arrives too late."],
- ["Speed needs supply", "Novidia has many +2s, but only 16 supply cards and two Supply chain cards. Supply chain returns to supply after the reveal: it can be deployed again, but needs funding to return to the race."],
- ["Balanced competition", "Testra has mostly +2 cards to offset its slow first treasury slot. Overtake swaps with one nearby company ahead after moving. It can close a small gap, but cannot catch a distant leader with its power."],
- ["Research from behind", "Obenay sits between Gogol’s steady growth and Novidia’s speed. Research moves 3 from behind, but only 1 while leading. Two fumbles can interrupt its comeback."],
- ["Orbital launches", "Orbix deploys extra growth, consuming finite supply."],
- ["Bumpy expansion", "Airnest refills treasury, but a modest deck limits speed."]
+ ["Steady cash flow", "Gogol turns attention into advertising revenue. A dependable cash cow that keeps growing while flashier rivals make headlines."],
+ ["Efficient reinvestment", "Amazin builds an empire on thin margins and relentless reinvestment. Patient investors back a business built to keep the deliveries coming."],
+ ["Move fast, break things", "Weta chases the next big idea at full speed. Expect bold pivots, sudden setbacks and a team always ready to try again."],
+ ["Speed needs supply", "Novidia sells the hardware everyone wants. Demand is soaring, but keeping the factories supplied is another story."],
+ ["Driven to overtake", "Testra has its sights on the company ahead. Ambitious engineering and fierce competition turn a close race into a fight for position."],
+ ["Chasing breakthroughs", "Obenay bets on research that could change everything. Chasing the frontier brings spectacular breakthroughs; defending the lead is harder."],
+ ["Orbital launches", "Orbix makes big bets on the next launch. It burns through resources quickly, hoping each success will carry it further."],
+ ["Bumpy expansion", "Airnest wants a room in every city. Fresh funding keeps expansion going, but local growing pains can slow the journey."]
 ];
 export const slotCards = (company, slot, companies = []) => slot === 0 ? 0 : COMPANIES[company.id].slots[slot-1];
 export const reserveCards = company => {

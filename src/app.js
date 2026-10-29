@@ -421,13 +421,13 @@ function dialog(title, body) {
   return d;
 }
 function supply() {
- const d=dialog("Growth supply",`<p>One preview per card type. The badge shows total copies; the count below shows unseen copies. Unseen cards may be in supply, the growth pile or face-down discards.</p><div class="deck-gallery">${game.companies.map(c=>{
+ const d=dialog("Growth supply",`<p>One preview per card type. Counts show unseen copies / total copies. Unseen cards may be in supply, the growth pile or face-down discards.</p><div class="deck-gallery">${game.companies.map(c=>{
  const deck=growthDeck(c.id),used=new Set([...c.history,...game.removed.filter(card=>card.company===c.id&&card.burned&&card.public)].map(card=>card.id)),groups=new Map();
  for(const card of deck){
   const key=JSON.stringify([card.printed,card.signature,card.effect]),group=groups.get(key)??{card,total:0,unseen:0};
   group.total++;group.unseen+=Number(!used.has(card.id));groups.set(key,group);
  }
- return `<section class="company-deck" style="--company:${COMPANIES[c.id].color};--tilt:${((c.id*7)%5-2)*.7}deg"><header><h3>${co(c.id)}</h3><span>${deck.filter(card=>!used.has(card.id)).length} unseen · ${c.supply.length} in supply</span></header><p class="deck-theme"><b>${DECK_THEMES[c.id][0]}.</b> ${DECK_THEMES[c.id][1]}</p><div class="deck-fan">${[...groups.values()].map(({card,total,unseen})=>`<div class="deck-group"><div class="deck-slot ${unseen?'':'card-used'} ${card.signature?'signature-slot':''}" tabindex="0" title="${total} copies · ${unseen} unseen">${cardHTML(card,false)}<span class="card-quantity" aria-label="${total} copies">×${total}</span></div><small class="deck-availability">${unseen} unseen</small></div>`).join('')}</div></section>`;
+ return `<section class="company-deck" style="--company:${COMPANIES[c.id].color};--tilt:${((c.id*7)%5-2)*.7}deg"><header><h3>${co(c.id)}</h3><span>${deck.filter(card=>!used.has(card.id)).length} unseen · ${c.supply.length} in supply</span></header><p class="deck-theme"><b>${DECK_THEMES[c.id][0]}.</b> ${DECK_THEMES[c.id][1]}</p><div class="deck-fan">${[...groups.values()].map(({card,total,unseen})=>`<div class="deck-group"><div class="deck-slot ${unseen?'':'card-used'} ${card.signature?'signature-slot':''}" tabindex="0" title="${unseen} unseen out of ${total} copies">${cardHTML(card,false)}<span class="card-quantity" aria-label="${total} copies">×${total}</span></div><small class="deck-availability">${unseen}/${total}</small></div>`).join('')}</div></section>`;
  }).join("")}</div>`);
  d.classList.add('supply-guide');
 }
