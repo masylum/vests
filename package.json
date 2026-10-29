@@ -1,0 +1,19 @@
+{
+  "name": "vests",
+  "version": "96.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "test": "node --test",
+    "simulate": "node simulate.js",
+    "balance": "node scripts/balance-study.js",
+    "balance:report": "node scripts/money-report.js",
+    "benchmark": "node scripts/benchmark.js",
+    "native:build": "node scripts/build-native.js"
+  }
+}

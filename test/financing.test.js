@@ -1,0 +1,22 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {createGame,observation} from '../src/engine.js';
+import {forecasts} from '../src/bots.js';
+import {productiveFundingLimit,investmentCeiling,adaptiveBid} from '../src/adaptive.js';
+import {portfolioWealth} from '../src/valuation.js';
+test('productive funding threshold follows remaining slots and funding band',()=>{const v=observation(createGame(),0),c=v.companies[0];c.founder=0;assert.equal(productiveFundingLimit(v,0),7);c.reserve=1;assert.equal(productiveFundingLimit(v,0),4);c.reserve=2;assert.equal(productiveFundingLimit(v,0),1);c.reserve=3;assert.equal(productiveFundingLimit(v,0),0);c.reserve=0;c.position=17;assert.equal(productiveFundingLimit(v,0),11);c.supplyCount=0;assert.equal(productiveFundingLimit(v,0),0);});
+test('diluted share proceeds inform economic bid ceilings',()=>{const v=observation(createGame(),0);v.auction={company:0};const values=v.companies.map(()=>({expected:11,value:11,prices:[11],finalPrices:[11]}));assert.equal(investmentCeiling(v,0,values,()=>values),11);values.forEach(x=>x.prices=x.finalPrices=[6]);assert.equal(investmentCeiling(v,0,values,()=>values),6);});
+test('future shares are paid for and existing shares are diluted in portfolio valuation',()=>{const v=observation(createGame(),0);v.players[0].cash=100;v.players[0].obligation=100;v.companies[0].tokens=[{owner:0}];const values=v.companies.map(()=>({finalPrices:[0],futureShares:[[0]],futureSpending:[[0]]}));values[0]={finalPrices:[20],futureShares:[[1]],futureSpending:[[15]]};assert.equal(portfolioWealth(v,0,values,0),25);values[0].futureShares=[[0]];assert.equal(portfolioWealth(v,0,values,0),5);});
+test('forecast financing respects each investor budget and charges actual auction payment',()=>{const g=createGame(),v=observation(g,0);v.auction={company:0};v.players.forEach(p=>p.cash=0);v.players[0].cash=50;const a=forecasts(v,0,{samples:6,auctionOutcome:{winner:0,paid:50}});assert(a.every(c=>c.futureSpending.every(samples=>samples.every(x=>x===0))));assert(a.every(c=>c.futureShares.every(samples=>samples.every(x=>x===0))));const b=forecasts(v,0,{samples:6,auctionOutcome:{winner:0,paid:15}});assert(b[0].futureSpending[0].some(x=>x>0));assert(b[0].futureSpending[0].every(x=>x<=35));assert(b[0].futureSpending.slice(1).every(samples=>samples.every(x=>x===0)));assert(b.some(c=>c.expectedFinalShares>a[c.company].expectedFinalShares));});
+test('normal bots can pay an ownership premium above useful treasury funding, including all-in',()=>{
+ const v=observation(createGame(),0);v.auction={company:0,reserve:3,host:0};
+ v.auctionHistory=Array.from({length:12},()=>({company:0,bids:v.players.map(p=>({player:p.id,amount:20}))}));
+ const values=v.companies.map(()=>({expected:50,value:50,prices:[50],finalPrices:[50]})),forecast=()=>values;
+ assert.equal(productiveFundingLimit(v,0),7);
+ assert.equal(investmentCeiling(v,0,values,forecast),50);
+ assert(adaptiveBid(v,0,values,()=>.9,forecast)>6);
+ v.companies[0].reserve=3;v.companies[0].supplyCount=0;
+ assert.equal(productiveFundingLimit(v,0),0);
+ assert.equal(investmentCeiling(v,0,values,forecast),50);
+ v.players[0].cash=21;
+ assert.equal(adaptiveBid(v,0,values,()=>.9,forecast),21);
+});

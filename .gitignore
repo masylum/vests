@@ -1,0 +1,8 @@
+node_modules/
+.DS_Store
+
+# Platform-specific accelerator; build locally with npm run native:build.
+native/build/
+
+# Local reports and tournament archives. Required test fixtures are already tracked.
+/docs/

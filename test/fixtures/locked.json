@@ -1,0 +1,1 @@
+{"version": 54, "setup": {}, "commands": [{"id": 1, "cmd": {"type": "call", "company": 0}}, {"id": 1, "cmd": {"type": "bid", "amount": 30}}, {"id": 2, "cmd": {"type": "bid", "amount": 0}}, {"id": 3, "cmd": {"type": "bid", "amount": 0}}, {"id": 0, "cmd": {"type": "bid", "amount": 100}}]}

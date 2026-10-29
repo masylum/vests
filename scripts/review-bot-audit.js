@@ -1,0 +1,15 @@
+import fs from 'node:fs';
+import {VERSION,COMPANIES} from '../src/config.js';
+import {createGame,command,assertGame} from '../src/engine.js';
+import {exitRevenue} from './exit-revenue.js';
+const dir=`docs/v${VERSION}-health/bot-audit`,files=fs.readdirSync(dir).filter(f=>f.endsWith('-replay.json')).sort(),sum=a=>a.reduce((n,x)=>n+x,0);
+const rows=files.map(file=>{
+ const replay=JSON.parse(fs.readFileSync(`${dir}/${file}`)),g=createGame(replay.setup),history=g.companies.map(c=>new Set([c.founder]));
+ for(const {id,cmd} of replay.commands){command(g,id,cmd);assertGame(g);g.companies.forEach(c=>history[c.id].add(c.founder));}
+ if(!g.ended)throw Error('Audit did not finish');
+ const exit=exitRevenue(g.settlement,history.map(s=>[...s])),decisions=JSON.parse(fs.readFileSync(`${dir}/${replay.setup.seed}-decisions.json`));
+ const calls=decisions.filter(d=>d.phase==='call'),passes=calls.filter(d=>d.command.type==='call'&&d.command.company===null),sales=decisions.filter(d=>d.card==='sell').map(d=>({round:d.round,player:d.player,company:d.command.company,payout:g.rules.sellPayouts[d.leg],forecast:d.saleForecasts.find(f=>f.company===d.command.company),quote:d.quote}));
+ return{seed:g.seed,rounds:g.metrics.cycles,scores:g.scores,exit,obligations:g.settlement.accounts.map(a=>a.due),defaults:g.settlement.accounts.map(a=>a.unpaid),fees:g.settlement.accounts.map(a=>a.fee),calls:calls.length,passes:passes.length,raises:calls.filter(d=>d.command.type==='raiseMoney').length,hires:calls.filter(d=>d.command.type==='changeFounder').length,auctions:calls.filter(d=>d.command.type==='call'&&d.command.company!=null).length,emptyPortfolioPasses:passes.filter(d=>!d.portfolio.length).length,blockedCashPasses:passes.filter(d=>d.cash-d.locked<g.rules.projectPrices[0][0]).length,positiveValuePlays:decisions.filter(d=>d.card&&d.bestValue>=0).length,negativeValuePlays:decisions.filter(d=>d.card&&d.bestValue<0).length,sales,lateBorrows:calls.filter(d=>d.command.type==='raiseMoney'&&d.leg===2),maxPortfolio:Math.max(...decisions.map(d=>d.portfolio.length)),bids:decisions.filter(d=>d.phase==='bid').map(d=>({round:d.round,leg:d.leg,player:d.player,amount:d.command.amount,cash:d.cash,locked:d.locked,company:d.auction.company}))};
+});
+fs.writeFileSync(`${dir}/review.json`,JSON.stringify(rows,null,2));
+console.log(JSON.stringify({games:rows.length,calls:sum(rows.map(r=>r.calls)),passes:sum(rows.map(r=>r.passes)),emptyPortfolioPasses:sum(rows.map(r=>r.emptyPortfolioPasses)),blockedCashPasses:sum(rows.map(r=>r.blockedCashPasses)),raises:sum(rows.map(r=>r.raises)),hires:sum(rows.map(r=>r.hires)),positiveValuePlays:sum(rows.map(r=>r.positiveValuePlays)),negativeValuePlays:sum(rows.map(r=>r.negativeValuePlays)),sales:rows.flatMap(r=>r.sales),samples:rows.map(r=>({seed:r.seed,scores:r.scores,exits:r.exit.byPlayer.map(sum),companyReceipts:r.exit.companies.map(c=>[COMPANIES[c.company].name,c.revenue]),defaults:r.defaults,fees:r.fees,passes:r.passes,auctions:r.auctions,raises:r.raises,hires:r.hires,maxPortfolio:r.maxPortfolio,lateBorrows:r.lateBorrows.map(d=>({round:d.round,cash:d.cash}))}))},null,2));

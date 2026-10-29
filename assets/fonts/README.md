@@ -1,0 +1,1 @@
+Outfit (weights 400–800) and Permanent Marker (400), downloaded from the Google Fonts CSS API. Font files are bundled locally to avoid fallback typography when the external stylesheet is unavailable. Original licenses accompany the fonts.

@@ -1,0 +1,15 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+import {parseArgs} from 'node:util';
+import {parallel} from './parallel.js';
+const {values:a}=parseArgs({options:{baseline:{type:'string',default:'docs/v70-health/source'},optimized:{type:'string',default:'docs/v71-health/baselines/v70'},games:{type:'string',default:'3'},out:{type:'string',default:'docs/v71-health/benchmark.json'}}});
+const count=Number(a.games);if(!Number.isInteger(count)||count<1)throw Error('Invalid game count');
+const jobs=Array.from({length:count},(_,i)=>['baseline','optimized'].map(variant=>({variant,seed:650010+i,players:4,samples:8,source:a[variant]}))).flat();
+const rows=await parallel(jobs,{moduleURL:new URL('./study-game.js',import.meta.url),workers:1});
+if(rows.some(r=>!r.cpuMicros))throw Error('CPU benchmark requires Node with process.threadCpuUsage (the tested runtime is Node 23).');
+const clean=({variant,source,elapsedMs,cpuMicros,...r})=>r;
+for(let i=0;i<count;i++)assert.deepEqual(clean(rows[i*2]),clean(rows[i*2+1]));
+const sum=(variant,key)=>rows.filter(r=>r.variant===variant).reduce((s,r)=>s+r[key].user+r[key].system,0)/1e6;
+const baselineCpuSeconds=sum('baseline','cpuMicros'),optimizedCpuSeconds=sum('optimized','cpuMicros');
+const result={games:count,samples:8,identicalResults:true,baselineCpuSeconds,optimizedCpuSeconds,speedup:baselineCpuSeconds/optimizedCpuSeconds,rows:rows.map(({variant,seed,elapsedMs,cpuMicros,roundCount,scores})=>({variant,seed,elapsedMs,cpuMicros,roundCount,scores}))};
+fs.writeFileSync(a.out,JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));

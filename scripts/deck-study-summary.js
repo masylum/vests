@@ -1,0 +1,8 @@
+import fs from'node:fs';import{mean,quantile,contrast,holm}from'./statistics.js';
+const root=process.argv[2]??'docs/v87-health',main=JSON.parse(fs.readFileSync(root+'/study/raw.json')),old=JSON.parse(fs.readFileSync(root+'/deck-study/raw.json')),seeds=new Set(old.map(r=>r.seed)),current=main.filter(r=>r.players===4&&seeds.has(r.seed)).sort((a,b)=>a.seed-b.seed);old.sort((a,b)=>a.seed-b.seed);
+if(current.length!==old.length||current.some((r,i)=>r.seed!==old[i].seed||r.samples!==old[i].samples))throw Error('Unmatched deck comparison');
+const net=g=>{let before=g.entries[0].positions;return g.rounds.flatMap(round=>{const changes=round.positions.map((p,i)=>p-before[i]);before=round.positions;return changes;});};
+const metrics=[['Rounds',g=>g.roundCount],['Net movement SD per company-round',g=>{const a=net(g),m=mean(a);return Math.sqrt(mean(a.map(n=>(n-m)**2)));}],['Mean net movement per company-round',g=>mean(net(g))],['Largest company-round advance',g=>Math.max(...net(g))],['Final first-last gap',g=>Math.max(...g.final.positions)-Math.min(...g.final.positions)]];
+const results=holm(metrics.map(([name,fn])=>({name,before:mean(old.map(fn)),after:mean(current.map(fn)),...contrast(current.map(g=>[1,fn(g)]),old.map(g=>[1,fn(g)]))})));
+const summary={gamesPerArm:current.length,samples:8,results,notes:'New minus old. Every metric is averaged over games; net round movement includes value cards, founders, swaps and catch-up, and is capped at IPO. Both arms use v87 auction, turn order and burn; only supply mixes and Research 3/1 versus 2/1 differ. This is a system-level card-set comparison, not a human enjoyment study.'};
+fs.writeFileSync(root+'/deck-study/summary.json',JSON.stringify(summary,null,2));console.log(JSON.stringify(summary,null,2));
