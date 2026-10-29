@@ -1905,8 +1905,8 @@ body { padding:8px; }
 .game-layout .company .reserve-track { grid-template-columns:repeat(4,24px); width:max-content; gap:3px; margin:4px 0; }
 .game-layout .company .reserve-track>span { min-width:0; min-height:0; height:22px; padding:1px 3px; font-size:12px; line-height:18px; border-width:1px; border-radius:3px; }
 
-/* Card height is measured against the entire roster and value deck at the current width. */
-:is(#app,dialog) :is(.founder-card,.intel-card) { box-sizing:border-box; width:var(--founder-width); height:var(--card-height,auto); min-height:0; flex:none; align-self:start; }
+/* Full cards share a portrait format. */
+:is(#app,dialog) :is(.founder-card,.intel-card) { box-sizing:border-box; width:var(--founder-width); height:auto; aspect-ratio:5 / 7; min-height:0; flex:none; align-self:start; }
 :is(#app,dialog) .founder-card { display:flex; flex-direction:column; }
 :is(#app,dialog) .founder-face { width:100%; height:auto; min-height:0; flex:none; aspect-ratio:1456/816; margin:0; }
 :is(#app,dialog) .founder-copy { padding:8px 9px 9px; flex:none; }
@@ -1915,8 +1915,6 @@ body { padding:8px; }
 :is(#app,dialog) .intel-card { padding:12px; }
 :is(#app,dialog) .intel-card h3 { font-size:15px; line-height:1.25; margin:4px 0 8px; }
 :is(#app,dialog) .intel-card p { font-size:13px; line-height:1.35; margin:8px 0 0; }
-#app .card-sizer { position:fixed; left:-10000px; top:0; width:var(--founder-width); visibility:hidden; pointer-events:none; }
-#app .card-sizer :is(.founder-card,.intel-card) { height:auto!important; min-height:0!important; transform:none; }
 .game-layout .company .reserve-track { grid-template-columns:repeat(4,28px); gap:4px; }
 .game-layout .company .reserve-track>span { height:26px; padding:3px 4px; }
 .race-track path { stroke:var(--band-ink); }
@@ -2004,7 +2002,6 @@ body { padding:8px; }
 
 
 /* A stable drawer reserves the same space in every phase. */
-#app { --drawer-height:min(320px,39dvh); }
 #app>.decision,#app>.decision:has(.reaction-timeline,.power-prompt,.value-receipt,.intel-choice,.founder-options) { height:var(--drawer-height); min-height:var(--drawer-height); max-height:var(--drawer-height); flex:0 0 var(--drawer-height); padding:14px 18px 12px; gap:10px; box-sizing:border-box; }
 .decision-content { flex:1 1 0; min-height:0; }
 .decision .decision-content>h2,.decision .decision-content>.title { margin:0 0 14px; }
@@ -2170,10 +2167,8 @@ dialog.founder-guide { width:min(1000px,calc(100vw - 32px)); max-width:none; max
 .founder-guide .founder-card { width:100%; height:auto; min-height:310px; transform:none; }
 .founder-guide .founder-card .founder-copy p { font-size:14px; line-height:1.4; }
 .founder-guide-tip { max-width:850px; margin:0; font-size:13px; }
-.founder-guide .rules-pagination { margin:0; }
 #app .decision:has(.scout-cards) .decision-content>h2 { margin-bottom:6px; }
 #app .decision .scout-cards .growth-card { height:76px; min-height:76px; grid-template-rows:18px 25px 1fr; }
-.founder-guide .rules-pagination { display:flex; align-items:center; justify-content:space-between; }
 #app .decision .inspection-receipt { display:grid; grid-template-columns:240px minmax(0,1fr); gap:18px; align-items:start; }
 .inspection-discards { display:flex; gap:10px; }
 #app .decision .inspection-discards .growth-card { width:150px; min-width:150px; height:92px; min-height:92px; transform:none; padding:0; gap:0; display:grid; grid-template-rows:18px 25px 1fr; }
@@ -2231,3 +2226,89 @@ dialog.founder-guide { width:min(1000px,calc(100vw - 32px)); max-width:none; max
 
 #app>.top { margin:0 auto 14px; }
 #app>.top .brand h1 { font-family:'Fruktur',serif; }
+
+/* Readable rulebook measure, compact diagrams and colored captions. */
+.rules-tabs button { font-size:14px; }
+.rulebook-heading>span { font-size:30px; font-style:normal; }
+.rulebook-spread { grid-template-columns:minmax(0,1.2fr) minmax(0,1fr); gap:54px; }
+.rulebook-text { max-width:58ch; font-size:16px; line-height:1.45; }
+.rulebook-art { align-items:center; }
+.rulebook-art>figure,.rulebook-art>.rulebook-prices { width:100%; max-width:370px; }
+.rulebook-art figure { --figure-ink:#315d8c; }
+.rulebook-art figure:nth-child(2n) { --figure-ink:#6b438d; }
+.rulebook-art figure:nth-child(3n) { --figure-ink:#366941; }
+.rulebook-art figcaption { color:var(--figure-ink); font-size:12px; }
+.rule-bids { display:flex; justify-content:center; gap:8px; width:100%; }
+.rule-bids>span { display:grid; gap:5px; background:white; border-radius:5px; border-bottom:3px solid #83a8d4; padding:8px 12px; min-width:74px; text-align:center; color:#244f81; }
+.rule-bids small { font-size:11px; }
+.rule-bids b { font-size:18px; }
+.rule-bid-payment { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; color:#244f81; font-size:13px; }
+.rulebook-prices { gap:6px; }
+.price-band { padding:10px 12px; }
+.price-band h3 { margin-bottom:7px; }
+.price-band>div { justify-content:flex-start; gap:16px; }
+.price-option { min-width:64px; gap:3px; }
+.price-band.band-0 { color:#315d8c; }
+.price-band.band-1 { color:#366941; }
+.price-band.band-2 { color:#8a3f65; }
+.rule-hand { display:flex; justify-content:center; padding:8px; }
+.rule-hand .intel-card { width:82px; min-width:82px; height:115px; min-height:115px; padding:5px; margin:0 -7px; transform:rotate(-9deg); box-shadow:0 3px 8px #6b438d24; }
+.rule-hand .intel-card:nth-child(2) { transform:translateY(-6px); z-index:1; }
+.rule-hand .intel-card:nth-child(3) { transform:rotate(9deg); }
+.rule-hand .intel-card h3 { font-size:9px; margin:7px 0 0; }
+.rule-hand .intel-card p { display:none; }
+:is(#app,dialog) .intel-card:has(>.value-art) h3 { margin-top:12px; }
+@media(max-height:820px) {
+ .rulebook-text { font-size:15px; line-height:1.35; }
+ .rules-guide .rulebook-text h3 { margin-top:20px; }
+ .rules-guide .rulebook-text p { margin-bottom:8px; }
+ .rules-tabs button { font-size:13px; }
+}
+/* A continuous founder catalogue, with no paging controls. */
+dialog.founder-guide { width:min(1800px,calc(100vw - 32px)); height:calc(100dvh - 32px); overflow:hidden; }
+.founder-guide .founder-review { flex:1; min-height:0; overflow:auto; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; align-content:start; }
+.founder-guide .founder-card { min-height:0; }
+:is(#app,dialog) .rule-hand .intel-card { width:82px; min-width:82px; height:115px; min-height:115px; padding:5px; }
+:is(#app,dialog) .rule-hand .intel-card h3 { font-size:9px; line-height:1.2; margin:7px 0 0; }
+:is(#app,dialog).founder-guide .founder-card { width:100%; }
+.founder-guide .founder-review { grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:14px; }
+.rulebook-text { max-width:52ch; }
+.price-band>div { justify-content:center; }
+
+/* Portrait cards share the same physical proportions at every size. */
+#app,dialog { --founder-width:190px; }
+:is(#app,dialog) :is(.founder-card,.intel-card,.growth-card) { aspect-ratio:5 / 7; height:auto; min-height:0; }
+:is(#app,dialog) .founder-copy p { font-size:12px; line-height:1.25; }
+:is(#app,dialog) .intel-card p { font-size:12px; line-height:1.25; }
+:is(#app,dialog) .founder-copy small { font-size:14px; }
+:is(#app,dialog).founder-guide .founder-card { height:auto; min-height:0; }
+.founder-guide .founder-review .founder-copy p { font-size:12px; line-height:1.25; }
+:is(#app,dialog) .rule-hand .intel-card { height:auto; min-height:0; }
+#app .decision :is(.reaction-timeline,.power-prompt,.value-receipt) :is(.founder-card,.intel-card) { width:140px; height:auto; min-height:0; display:flex; flex-direction:column; gap:0; aspect-ratio:5 / 7; padding:6px; }
+#app .decision :is(.reaction-timeline,.power-prompt,.value-receipt) :is(.founder-face,.value-art) { width:100%; height:60px; min-height:0; aspect-ratio:auto; object-fit:cover; flex:none; margin:0 0 6px; }
+#app .decision :is(.reaction-timeline,.power-prompt,.value-receipt) .founder-copy { padding:0; }
+#app .decision :is(.reaction-timeline,.power-prompt,.value-receipt) :is(.founder-copy p,.intel-card p) { font-size:10px; line-height:1.2; margin:4px 0 0; }
+#app .decision :is(.reaction-timeline,.power-prompt,.value-receipt) :is(.founder-copy small,.intel-card h3) { font-size:12px; line-height:1.15; margin:0; }
+#app .decision :is(.reaction-timeline>li,.power-prompt,.value-receipt) { grid-template-columns:140px minmax(0,1fr); }
+#app .decision .growth-card { width:110px; min-width:110px; height:auto; min-height:0; aspect-ratio:5 / 7; }
+#app .decision .power-prompt>.growth-card { width:110px; min-width:110px; height:auto; min-height:0; }
+#app .decision .power-prompt:has(>.growth-card) { grid-template-columns:110px minmax(0,1fr); }
+#app .decision :is(.scout-cards,.inspection-discards) .growth-card { width:100px; min-width:100px; height:auto; min-height:0; }
+#app .decision .scout-cards>article { width:100px; }
+#app .decision.intel-decision .intel-choice { display:grid; grid-template-columns:120px minmax(0,1fr); align-items:start; gap:12px; }
+#app .decision.intel-decision .intel-card { width:120px; height:auto; aspect-ratio:5 / 7; min-height:0; }
+#app .decision.intel-decision .intel-card p { font-size:11px; line-height:1.2; }
+#app .decision.intel-decision .intel-card h3 { font-size:13px; }
+#app .decision.intel-decision .intel-actions { flex-direction:column; align-items:flex-start; }
+.deployed-card { aspect-ratio:5 / 7; height:auto; }
+.rules-guide .growth-card { width:70px; min-width:70px; }
+#app .decision.intel-decision .intel-cards { margin-top:6px; }
+#app .decision .value-receipt { grid-template-columns:130px minmax(0,1fr); }
+#app .decision .value-receipt .intel-card { width:130px; }
+#app .decision :is(.reaction-timeline,.value-receipt) .intel-card .value-art { width:100%; height:60px; grid-row:auto; margin:0 0 6px; }
+#app .decision :is(.reaction-timeline,.power-prompt) .founder-card .founder-face { height:50px; }
+#app .decision .reveal-card>div:has(.reaction-timeline) { display:grid; grid-template-columns:minmax(180px,.7fr) minmax(0,1.3fr); gap:8px 16px; align-items:start; }
+#app .decision .reveal-card>div:has(.reaction-timeline)>:not(.reaction-timeline) { grid-column:1; }
+#app .decision .reveal-card>div>.reaction-timeline { grid-column:2; grid-row:1 / span 6; margin:0; }
+#app { --drawer-height:min(400px,48dvh); }
+@media(max-height:820px) { .rules-guide .rulebook-text h3 { margin-top:17px; } }
