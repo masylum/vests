@@ -2310,7 +2310,7 @@ dialog.founder-guide { width:min(1600px,calc(100vw - 48px)); height:fit-content;
 #app .decision .reveal-card>div:has(.reaction-timeline) { display:grid; grid-template-columns:minmax(180px,.7fr) minmax(0,1.3fr); gap:8px 16px; align-items:start; }
 #app .decision .reveal-card>div:has(.reaction-timeline)>:not(.reaction-timeline) { grid-column:1; }
 #app .decision .reveal-card>div>.reaction-timeline { grid-column:2; grid-row:1 / span 6; margin:0; }
-#app { --drawer-height:min(400px,48dvh); }
+#app { --drawer-height:min(300px,48dvh); }
 @media(max-height:820px) { .rules-guide .rulebook-text h3 { margin-top:17px; } }
 
 /* Catalogue previews group identical cards instead of repeating every copy. */
