@@ -2265,8 +2265,8 @@ dialog.founder-guide { width:min(1000px,calc(100vw - 32px)); max-width:none; max
  .rules-tabs button { font-size:13px; }
 }
 /* A continuous founder catalogue, with no paging controls. */
-dialog.founder-guide { width:min(1800px,calc(100vw - 32px)); height:calc(100dvh - 32px); overflow:hidden; }
-.founder-guide .founder-review { flex:1; min-height:0; overflow:auto; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; align-content:start; }
+dialog.founder-guide { width:min(1600px,calc(100vw - 48px)); height:fit-content; overflow:hidden; }
+.founder-guide .founder-review { flex:0 1 auto; min-height:0; overflow:auto; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; align-content:start; }
 .founder-guide .founder-card { min-height:0; }
 :is(#app,dialog) .rule-hand .intel-card { width:82px; min-width:82px; height:115px; min-height:115px; padding:5px; }
 :is(#app,dialog) .rule-hand .intel-card h3 { font-size:9px; line-height:1.2; margin:7px 0 0; }
@@ -2312,3 +2312,17 @@ dialog.founder-guide { width:min(1800px,calc(100vw - 32px)); height:calc(100dvh 
 #app .decision .reveal-card>div>.reaction-timeline { grid-column:2; grid-row:1 / span 6; margin:0; }
 #app { --drawer-height:min(400px,48dvh); }
 @media(max-height:820px) { .rules-guide .rulebook-text h3 { margin-top:17px; } }
+
+/* Catalogue previews group identical cards instead of repeating every copy. */
+dialog.supply-guide { width:min(1440px,calc(100vw - 48px)); max-width:none; }
+.supply-guide .deck-gallery { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,570px),1fr)); gap:16px; }
+.supply-guide .company-deck { padding:16px; }
+.supply-guide .company-deck>header { margin-bottom:10px; gap:12px; }
+.supply-guide .company-deck h3 { font-size:23px; }
+.supply-guide .deck-theme { font-size:12px; line-height:1.4; margin-bottom:16px; }
+.supply-guide .deck-fan { grid-template-columns:repeat(auto-fit,110px); gap:14px; }
+.supply-guide .growth-card { width:110px; min-width:110px; padding:0; grid-template-rows:22px minmax(0,1fr) 60px; transform:none; }
+.supply-guide .growth-card>b { font-size:13px; padding:4px 6px; }
+.supply-guide .growth-card>small { font-size:10px; line-height:1.2; padding:5px; }
+.card-quantity { position:absolute; top:-9px; right:-7px; z-index:1; padding:3px 7px; border:2px solid #111; border-radius:20px; background:white; color:#111; font-size:13px; font-weight:700; }
+.deck-availability { display:block; margin-top:7px; text-align:center; font-size:11px; color:color-mix(in srgb,var(--company),#111 65%); }
