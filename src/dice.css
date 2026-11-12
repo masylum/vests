@@ -172,7 +172,9 @@
 .mild-dice-app #app .secret-investment .bonus-title{font-size:13px;font-weight:800;line-height:1.2;}
 
 .mild-dice-app #app .game-layout .intel-hand>.intel-cards:has(.secret-investment){grid-template-rows:100px repeat(3,210px)}
-.mild-dice-app #app>.funds .fund{border-color:var(--fund-color);display:flex;flex-direction:column;justify-content:center;gap:6px}
+.mild-dice-app #app>.funds .fund{border-color:var(--fund-color);--fund-ink:color-mix(in srgb,var(--fund-color) 65%,black);color:var(--fund-ink);display:flex;flex-direction:column;justify-content:center;gap:6px}
+.mild-dice-app #app>.funds .fund .turn-label{color:var(--fund-ink)}
+.mild-dice-app #app>.funds .fund em{background:var(--fund-ink)}
 .mild-dice-app #app .dice-capital-track{display:flex;gap:5px;list-style:none;padding:0;margin:0}
-.mild-dice-app #app .dice-capital-track li{display:grid;place-items:center;min-width:28px;height:24px;border:1px solid var(--fund-color);border-radius:3px;font-size:12px;line-height:1;color:var(--fund-color);background:white}
+.mild-dice-app #app .dice-capital-track li{display:grid;place-items:center;min-width:28px;height:24px;border:1px solid var(--fund-color);border-radius:3px;font-size:12px;line-height:1;color:var(--fund-ink);background:white}
 .mild-dice-app #app .dice-capital-track li.selected{background:var(--fund-color);color:white;font-weight:800}
