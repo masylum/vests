@@ -34,7 +34,6 @@
 .live-dice-app .score-grid b{font-size:12px;line-height:15px}
 @media(max-width:1100px){
  .live-dice-app #app>.top{height:76px;min-height:76px;display:grid;grid-template-columns:260px 1fr;grid-template-rows:30px 38px;gap:4px}
- .live-dice-app #app>.top .status{justify-self:end;white-space:nowrap}
  .live-dice-app #app>.top nav{grid-column:1 / -1;justify-content:flex-end}
  .live-dice-app #app>.top nav button{white-space:nowrap;padding:6px 10px}
 }
@@ -175,6 +174,35 @@
 .mild-dice-app #app>.funds .fund{border-color:var(--fund-color);--fund-ink:color-mix(in srgb,var(--fund-color) 65%,black);color:var(--fund-ink);display:flex;flex-direction:column;justify-content:center;gap:6px}
 .mild-dice-app #app>.funds .fund .turn-label{color:var(--fund-ink)}
 .mild-dice-app #app>.funds .fund em{background:var(--fund-ink)}
-.mild-dice-app #app .dice-capital-track{display:flex;gap:5px;list-style:none;padding:0;margin:0}
-.mild-dice-app #app .dice-capital-track li{display:grid;place-items:center;min-width:28px;height:24px;border:1px solid var(--fund-color);border-radius:3px;font-size:12px;line-height:1;color:var(--fund-ink);background:white}
+.mild-dice-app #app .dice-capital-track{display:flex;gap:5px;list-style:none;padding:0;margin:0;width:100%}
+.mild-dice-app #app .dice-capital-track li{display:grid;place-items:center;flex:1;min-width:0;height:24px;border:1px solid var(--fund-color);border-radius:3px;font-size:12px;line-height:1;color:var(--fund-ink);background:white}
 .mild-dice-app #app .dice-capital-track li.selected{background:var(--fund-color);color:white;font-weight:800}
+
+.mild-dice-app #app>.top .variant-link {
+  display:inline-flex;
+  align-items:center;
+  min-height:34px;
+  padding:0 10px;
+  border:2px solid #111;
+  border-radius:9px;
+  color:#111;
+  background:#fff;
+  font-size:13px;
+  text-decoration:none;
+}
+.mild-dice-app #app>.top .variant-link:hover { background:#eee; }
+
+.mild-dice-app #app .game-layout .company {
+  --company-ink:color-mix(in srgb,var(--company) 45%,black);
+  border-color:var(--company-ink);
+  color:var(--company-ink);
+}
+.mild-dice-app #app .game-layout .company>.founder-card { padding:7px; }
+.mild-dice-app #app .game-layout .company>header h3 { color:var(--company-ink); }
+.mild-dice-app #app .game-layout .company .company-counts {
+  grid-template-columns:max-content;
+  color:var(--company-ink);
+}
+.mild-dice-app #app .game-layout .company .company-counts>div { padding:6px 9px; }
+.mild-dice-app #app .game-layout .company-counts dt { white-space:nowrap; }
+.mild-dice-app #app .game-layout .company-counts dd { font-size:16px; }
