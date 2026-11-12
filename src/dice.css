@@ -91,10 +91,43 @@
 .mild-dice-app #app .game-layout :is(.board-column,.table-layout,.board-scroll,.board){height:780px;min-height:780px;max-height:780px}
 .mild-dice-app #app .game-layout .board{padding:120px 110px;box-sizing:border-box}
 .mild-dice-app #app .game-layout :is(.centre,.companies){height:540px;min-height:540px;max-height:540px;box-sizing:border-box}
-.mild-dice-app #app .game-layout .companies{grid-template-columns:repeat(var(--company-cols,3),minmax(0,1fr));grid-template-rows:repeat(2,246px);gap:18px;align-content:center}
-.mild-dice-app #app .game-layout .company{height:246px;min-height:246px;max-height:246px;grid-template-columns:140px minmax(0,1fr);grid-template-rows:32px 190px;padding:10px;gap:0 10px;box-sizing:border-box;transform:none}
-.mild-dice-app #app .game-layout .company>.founder-card{width:140px;height:222px;min-height:222px;grid-column:1;grid-row:1/span 2;box-sizing:border-box}
-.mild-dice-app #app .game-layout .company>.company-details{height:190px;min-height:0;grid-column:2;grid-row:2}
+.mild-dice-app #app .game-layout .companies {
+  --founder-width:140px;
+  --mat-padding:10px;
+  --mat-border:2px;
+  --mat-height:calc(var(--founder-width) * 7 / 5 + 2 * (var(--mat-padding) + var(--mat-border)));
+  grid-template-columns:repeat(var(--company-cols,3),minmax(0,1fr));
+  grid-template-rows:repeat(2,var(--mat-height));
+  gap:18px;
+  align-content:center;
+}
+.mild-dice-app #app .game-layout .company {
+  height:var(--mat-height);
+  min-height:0;
+  grid-template-columns:var(--founder-width) minmax(0,1fr);
+  grid-template-rows:32px minmax(0,1fr);
+  padding:var(--mat-padding);
+  border-width:var(--mat-border);
+  gap:0 10px;
+  box-sizing:border-box;
+  transform:none;
+}
+.mild-dice-app #app .game-layout .company>.founder-card {
+  width:var(--founder-width);
+  height:auto;
+  min-height:0;
+  aspect-ratio:5 / 7;
+  grid-column:1;
+  grid-row:1 / span 2;
+  box-sizing:border-box;
+}
+.mild-dice-app #app .game-layout .company>.company-details {
+  height:auto;
+  min-height:0;
+  align-self:stretch;
+  grid-column:2;
+  grid-row:2;
+}
 .mild-dice-app #app .game-layout .company>header{grid-column:2;grid-row:1;height:32px;min-height:32px}
 .mild-dice-app #app .game-layout .company>header h3{font-size:18px}
 .mild-dice-app #app .game-layout .company .founder-copy p{font-size:12px;line-height:1.2}

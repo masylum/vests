@@ -110,7 +110,7 @@ function alignDrawer(){
  const scene=root.querySelector('.game-layout'),panel=root.querySelector('.decision'),table=root.querySelector('.tabletop');if(!scene)return;
  const availableHeight=Math.max(180,root.clientHeight-root.querySelector('.top').offsetHeight-root.querySelector('.funds').offsetHeight-panel.offsetHeight-root.querySelector('.deal-hand').offsetHeight-40);
  const scale=Math.max(.1,Math.min((table.clientWidth-16)/1640,(availableHeight-12)/900))*(root.clientWidth>1800?.94:1);
- scene.style.setProperty('--table-height','780px');scene.style.setProperty('--mat-height','246px');scene.style.setProperty('--founder-width','140px');scene.style.width='1640px';scene.style.height='900px';scene.style.left='50%';scene.style.top='6px';scene.style.setProperty('--scene-scale',scale);scene.style.transform=`translateX(-50%) scale(${scale})`;table.style.flex='1 1 0';table.style.height='auto';panel.style.width=`${Math.min(root.clientWidth-24,1180)}px`;root.querySelector('.funds').style.width=`${Math.min(root.clientWidth-16,1200)}px`;
+ scene.style.setProperty('--table-height','780px');scene.style.setProperty('--founder-width','140px');scene.style.width='1640px';scene.style.height='900px';scene.style.left='50%';scene.style.top='6px';scene.style.setProperty('--scene-scale',scale);scene.style.transform=`translateX(-50%) scale(${scale})`;table.style.flex='1 1 0';table.style.height='auto';panel.style.width=`${Math.min(root.clientWidth-24,1180)}px`;root.querySelector('.funds').style.width=`${Math.min(root.clientWidth-16,1200)}px`;
 }
 const layoutObserver=new ResizeObserver(alignDrawer);
 function render(){
