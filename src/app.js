@@ -336,19 +336,13 @@ function paginateReactions(){
 const pawnMotion=createPawnMotion(),animatePawns=pawnMotion.animatePawns,motionCleanup=pawnMotion.cancel;
 function alignDrawer(){
  const scene=root.querySelector('.game-layout'),panel=root.querySelector('.decision'),table=root.querySelector('.tabletop');if(!scene||!panel||!table)return;
- const width=1450,minimumHeight=560;
- const availableHeight=Math.max(180,root.clientHeight-root.querySelector('.top').offsetHeight-root.querySelector('.funds').offsetHeight-panel.offsetHeight-32);
- const scale=Math.max(.1,Math.min((table.clientWidth-16)/width,(availableHeight-12)/minimumHeight));
- const height=(availableHeight-12)/scale;
- scene.style.setProperty('--table-height',`${height}px`);
- scene.style.setProperty('--mat-height','205px');
- scene.style.setProperty('--founder-width','129.285px');
+ const width=1640,height=780;
+ const scale=Math.max(.1,Math.min((table.clientWidth-16)/width,(table.clientHeight-12)/height));
  scene.style.width=`${width}px`;scene.style.height=`${height}px`;scene.style.left='50%';scene.style.top='6px';
- table.style.flex='1 1 0';table.style.height='auto';
  scene.style.setProperty('--scene-scale',scale);
  scene.style.transform=`translateX(-50%) scale(${scale})`;
- panel.style.width=`${Math.min(920,scene.querySelector('.board').offsetWidth*scale*.84)}px`;
- root.querySelector('.funds').style.width=`${Math.min(root.clientWidth-16,1200)}px`;
+ panel.style.width=`${Math.min(root.clientWidth-24,Math.max(920,scene.querySelector('.board').offsetWidth*scale*.84))}px`;
+ root.querySelector('.funds').style.width=`${Math.min(root.clientWidth-16,Math.max(1200,scene.querySelector('.board').offsetWidth*scale))}px`;
 }
 const layoutObserver=new ResizeObserver(alignDrawer);
 function render() {

@@ -2504,3 +2504,20 @@ dialog.catalogue-inspector :is(.founder-copy p,p) { font-size:18px; line-height:
 
 
 }
+
+/* Classic tabletop: one measured scene, with mats inside the track's inner lane. */
+body:not(.mild-dice-app) #app .game-layout{grid-template-columns:170px minmax(0,1fr) 170px;gap:16px;align-items:center}
+body:not(.mild-dice-app) #app .game-layout :is(.board-column,.table-layout,.board-scroll,.board){height:780px;min-height:780px;max-height:780px}
+body:not(.mild-dice-app) #app .game-layout .board{padding:120px 110px;box-sizing:border-box}
+body:not(.mild-dice-app) #app .game-layout :is(.centre,.companies){height:540px;min-height:540px;max-height:540px;padding:0;box-sizing:border-box}
+body:not(.mild-dice-app) #app .game-layout .companies{grid-template-rows:repeat(2,246px);gap:18px;align-content:center}
+body:not(.mild-dice-app) #app .game-layout .company{height:246px;min-height:246px;padding:10px;grid-template-columns:140px minmax(0,1fr);grid-template-rows:32px 190px;gap:0 10px;box-sizing:border-box}
+body:not(.mild-dice-app) #app .game-layout .company>.founder-card{width:140px;height:222px;min-height:222px;grid-column:1;grid-row:1/span 2;box-sizing:border-box}
+body:not(.mild-dice-app) #app .game-layout .company>header{height:32px;min-height:32px}
+body:not(.mild-dice-app) #app .game-layout .company>.company-details{height:190px;min-height:0}
+body:not(.mild-dice-app) #app .game-layout :is(.intel-hand,.founder-market){width:170px;height:780px}
+body:not(.mild-dice-app) #app .game-layout :is(.market-cards,.intel-hand>.intel-cards){display:flex;flex-direction:column;gap:10px;align-items:center}
+body:not(.mild-dice-app) #app .game-layout :is(.intel-hand .intel-card,.founder-market .founder-card){width:160px;height:238px;min-height:238px;padding:5px;box-sizing:border-box;flex:none}
+body:not(.mild-dice-app) #app .game-layout :is(.founder-face,.value-art){width:100%;height:74px;min-height:74px;max-height:74px;object-fit:cover;flex:none;margin:0}
+body:not(.mild-dice-app) #app .game-layout :is(.founder-copy small,.intel-card h3){font-size:13px;line-height:1.15}
+body:not(.mild-dice-app) #app .game-layout :is(.founder-copy p,.company .founder-copy p,.intel-card p){font-size:13px;line-height:1.15;display:block;overflow:visible;-webkit-line-clamp:unset}
