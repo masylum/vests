@@ -1,7 +1,5 @@
 /* Dice-specific additions; the table, typography, cards and drawer use classic styles. */
 .dice-app .deal-hand{display:flex;gap:6px;align-items:center;justify-content:center;flex:0 0 36px}
-.dice-app .deal-card{border-top:4px solid var(--company)}
-.dice-app .deal-card.selected{outline:2px solid #111;outline-offset:1px}
 .dice-app .decision-content>h2{margin:2px 0;font-size:18px}
 .dice-app .decision-content>p{margin:5px 0;font-size:12px}
 .dice-app .decision-content select{max-width:100%}
@@ -42,7 +40,6 @@
 .mild-dice-app #app .decision-actions { grid-row:2; }
 .mild-dice-app #app .deal-hand h3 { font-size:14px; }
 .mild-dice-app #app .deal-hand button { font-size:12px; min-height:32px; opacity:1; }
-.mild-dice-app #app .deal-hand button:disabled { color:#514d40; }
 .mild-dice-app #app .decision-content{overflow:visible}
 .mild-dice-app #app .reaction-timeline{margin:4px 0;padding:0;list-style:none}
 .mild-dice-app #app .reaction-timeline>li{display:flex;gap:12px;align-items:center;min-height:88px}
@@ -263,7 +260,21 @@
   min-width:0;
   overflow-x:auto;
 }
-.mild-dice-app #app .deal-hand button { flex:0 0 auto; white-space:nowrap; padding:3px 10px; }
+.mild-dice-app #app .deal-hand .deal-card {
+  --company-ink:color-mix(in srgb,var(--company) 38%,black);
+  --button-bg:var(--company);
+  --button-hover:color-mix(in srgb,var(--company) 85%,white);
+  --button-ink:var(--company-ink);
+  --button-border:var(--company-ink);
+  flex:0 0 auto;
+  white-space:nowrap;
+  padding:3px 10px;
+}
+.mild-dice-app #app .deal-hand .deal-card.selected {
+  box-shadow:inset 0 0 0 2px var(--company-ink);
+  font-weight:700;
+}
+.mild-dice-app #app .deal-hand .deal-card:focus-visible { outline-offset:-5px; }
 .mild-dice-app .roll-heading { display:flex; align-items:center; gap:8px; }
 .mild-dice-app .die-count { font-size:12px; font-weight:500; }
 .mild-dice-app #app .decision-actions button.primary {
