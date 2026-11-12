@@ -172,6 +172,9 @@
 
 .mild-dice-app #app .game-layout .intel-hand>.intel-cards:has(.secret-investment){grid-template-rows:100px repeat(3,210px)}
 .mild-dice-app #app>.funds .fund{border-color:var(--fund-color);--fund-ink:color-mix(in srgb,var(--fund-color) 65%,black);color:var(--fund-ink);display:flex;flex-direction:column;justify-content:center;gap:6px}
+.mild-dice-app #app>.funds .fund.active {
+  background:color-mix(in srgb,var(--fund-color) 20%,white);
+}
 .mild-dice-app #app>.funds .fund .turn-label{color:var(--fund-ink)}
 .mild-dice-app #app>.funds .fund em{background:var(--fund-ink)}
 .mild-dice-app #app .dice-capital-track{display:flex;gap:5px;list-style:none;padding:0;margin:0;width:100%}
