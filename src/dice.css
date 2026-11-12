@@ -266,13 +266,13 @@
   --button-hover:color-mix(in srgb,var(--company) 85%,white);
   --button-ink:var(--company-ink);
   --button-border:var(--company-ink);
+  font-weight:700;
   flex:0 0 auto;
   white-space:nowrap;
   padding:3px 10px;
 }
 .mild-dice-app #app .deal-hand .deal-card.selected {
   box-shadow:inset 0 0 0 2px var(--company-ink);
-  font-weight:700;
 }
 .mild-dice-app #app .deal-hand .deal-card:focus-visible { outline-offset:-5px; }
 .mild-dice-app .roll-heading { display:flex; align-items:center; gap:8px; }

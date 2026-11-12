@@ -7,7 +7,7 @@ export function founderPortrait(f) {
 export function founderDescription(text,emphasis="") {
  const cues=(Array.isArray(emphasis)?emphasis:[emphasis]).filter(Boolean);
  const cue=cues.length?new RegExp("(?<![A-Za-z0-9])(?:"+cues.map(s=>[...s].map(c=>"\\^$.*+?()[]{}|".includes(c)?"\\"+c:c).join("")).join("|")+")(?![A-Za-z0-9])","gi"):null;
- return esc(text.replace(/(deploy[^.!]*?)cards?/gi,(part)=>part.replace(/cards?/gi,m=>m.toLowerCase()==='cards'?'tokens':'token')).replace(/growth cards/gi,'growth tokens').replace(/growth card/gi,'growth token').replace(/supply cards/gi,'supply tokens')).replace(cue??/$^/,'<strong>$&</strong>').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/(?:Before|After) the reveal|Reveal (?:start|end)|During (?:the )?reveal|Once per reveal|Once per round|At the end of the round/gi,'<mark class="reveal-timing">$&</mark>');
+ return esc(text.replace(/(deploy[^.!]*?)cards?/gi,(part)=>part.replace(/cards?/gi,m=>m.toLowerCase()==='cards'?'tokens':'token')).replace(/growth cards/gi,'growth tokens').replace(/growth card/gi,'growth token').replace(/supply cards/gi,'supply tokens')).replace(cue??/$^/,'<strong>$&</strong>').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/(?:Before|After) the reveal|Reveal (?:start|end)|During (?:the )?reveal|Once per reveal|Once per round|At the end of the round|At round&#39;s end/gi,'<mark class="reveal-timing">$&</mark>');
 }
 export function founderCard(f, extra = "") {
  const trigger=f.trigger?founderDescription(f.trigger)+',':'';
