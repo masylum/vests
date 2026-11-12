@@ -1,0 +1,6 @@
+import fs from'node:fs';import path from'node:path';import{parallel}from'./parallel.js';
+const out=path.resolve(process.argv[2]??'docs/v108-card-study'),contexts=JSON.parse(fs.readFileSync(out+'/contexts.json')),jobs=[];
+for(const [card,base]of [['focused','matching'],['financing','matching'],['inside','advisor']])for(const [i,c]of contexts[base].entries())jobs.push({kind:'pair',...c,card,id:`matched-${card}-${i}`,samples:20,source:out+'/source',out});
+fs.writeFileSync(out+'/followup-protocol.json',JSON.stringify({reason:'Exploratory same-position comparisons after primary rankings: Focused vs Matching, Bridge vs Matching, Inside vs Advisor.',selection:'Use exactly the six primary Matching positions or six primary Advisor positions, no outcome-based exclusions.',jobs},null,2));
+const old=fs.existsSync(out+'/matched-pairs.jsonl')?fs.readFileSync(out+'/matched-pairs.jsonl','utf8').trim().split('\n').filter(Boolean).map(JSON.parse):[],seen=new Set(old.map(x=>x.id));
+await parallel(jobs.filter(j=>!seen.has(j.id)),{workers:4,moduleURL:new URL('./card-outcome-game.js',import.meta.url),onResult:r=>{fs.appendFileSync(out+'/matched-pairs.jsonl',JSON.stringify(r)+'\n');console.log(r.id,r.status,r.scoreDelta,r.error??'');}});

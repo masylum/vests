@@ -1,0 +1,15 @@
+import fs from'node:fs';import path from'node:path';import{createHash}from'node:crypto';import{parallel}from'./parallel.js';
+const out=path.resolve(process.env.VESTS_STUDY??'docs/v112-health'),source=out+'/source',baseline=out+'/baseline';
+for(const dir of [source,baseline,out+'/samples'])fs.mkdirSync(dir,{recursive:true});
+const hash=x=>createHash('sha256').update(x).digest('hex'),hashes={};
+for(const f of fs.readdirSync('src').filter(f=>/\.(js|css)$/.test(f))){const data=fs.readFileSync('src/'+f);if(fs.existsSync(source+'/'+f)&&!fs.readFileSync(source+'/'+f).equals(data))throw Error('Frozen source changed: '+f);hashes[f]=hash(data);fs.writeFileSync(source+'/'+f,data);fs.writeFileSync(baseline+'/'+f,data);}
+for(const f of ['bots.js','adaptive.js','valuation.js'])fs.copyFileSync('docs/v111-health/source/'+f,baseline+'/'+f);
+const jobs=[];
+for(const players of [2,3,4])for(let i=0;i<(players===2?60:12);i++)for(let seat=0;seat<players;seat++)jobs.push({id:`match-${players}-${i}-${seat}`,variant:'match',players,seed:Number(process.env.VESTS_SEED??112100)+players*1000+i,samples:24,source,botSource:baseline,baselineSeats:Array.from({length:players},(_,s)=>s).filter(s=>s!==seat),newSeat:seat,out,health:true});
+for(const players of [2,3,4])for(let i=0;i<16;i++)jobs.push({id:`self-${players}-${i}`,variant:'self',players,seed:Number(process.env.VESTS_SEED??112100)+800+players*100+i,samples:24,source,out,health:true});
+for(const [i,players]of[2,3,4,2,3,4,2,3,4,4].entries())jobs.push({id:`sample-${i+1}`,variant:'review',players,seed:Number(process.env.VESTS_SEED??112100)+400+i,samples:24,source,out,health:true,trace:true});
+const manifest={version:112,date:'2026-11-03',hashes,jobs,node:process.version,workers:4,protocol:'Seat-rotated holdout: one v112 against v111 opponents, same v112 rules and 24-sample budget. 60 independent seeds at 2 players; 12 at 3/4. 16 all-v112 self-play seeds per count. Ten predetermined complete reviewed games. Pilot seeds 112000–112023 excluded. Baseline is frozen v111 bots/adaptive/valuation on v112 engine; thus both use returnable burn discards.',limits:'Search heuristics, not optimal play. Paired seat games share a setup seed and are correlated; report seed-block uncertainty. Sampled hypothetical deck order and replacement are approximations. No human fun or wall-clock session-time claim.'};manifest.identity=hash(JSON.stringify(manifest));
+const mf=out+'/manifest.json';if(fs.existsSync(mf)&&JSON.parse(fs.readFileSync(mf)).identity!==manifest.identity)throw Error('Protocol changed');fs.writeFileSync(mf,JSON.stringify(manifest,null,2));
+for(const f of ['scripts/health-game.js','scripts/v112-study.js','package-lock.json'])fs.copyFileSync(f,out+'/'+path.basename(f));
+const file=out+'/games.jsonl',prior=fs.existsSync(file)?fs.readFileSync(file,'utf8').trim().split('\n').filter(Boolean).map(JSON.parse):[],seen=new Set(prior.map(r=>r.id));
+await parallel(jobs.filter(j=>!seen.has(j.id)),{moduleURL:new URL('./health-game.js',import.meta.url),workers:4,onResult:r=>{fs.appendFileSync(file,JSON.stringify(r)+'\n');console.log(r.id,r.status,r.roundCount,r.error??'');}});

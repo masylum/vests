@@ -7,3 +7,7 @@ PNG originals copied unchanged from the user's October 20, 2026 attachments. Map
 ID 7 now uses the supplied Larry Ellison portrait (94fb03c4). ID 9 uses the replacement Larry Page portrait (85331de4), both identified by their embedded descriptions.
 
 IDs 20 and 21 use the user’s October 29 replacements, copied unchanged: `Naive Pink Portrait with Blue Glasses.png` → Mario Adonei, and `paoramen_make_bigger_--chaos_15_--ar_3922_--profile_zm4dxav_-_e9608002-8b16-4d5f-8b94-a9792f07d353_3.png` → Reid Fastings.
+
+IDs 23–25 use the user-supplied November 4 portraits, copied unchanged: `bony-ma.png` → Bony Ma, `daniel-egg.png` → Danilo Egg, `patricio.png` → Patricio Colson.
+
+November 4 follow-up: `danilo.png` replaces ID 24; `anya.png` supplies ID 26, renamed Anya Waikiki. Both copied unchanged.

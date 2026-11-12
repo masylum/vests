@@ -1,0 +1,10 @@
+const variant=new URLSearchParams(location.search).get('variant');
+if(variant==='dice')await import('./dice-app.js');
+else if(variant==='dice-v137')await import('./versions/v137/dice-app.js');
+else if(variant==='dice-v136')await import('./versions/v136/dice-app.js');
+else if(variant==='dice-v135')await import('./versions/v135/dice-app.js');
+else if(variant==='dice-v133')await import('./versions/v133/dice-app.js');
+else if(variant==='dice-v132')await import('./versions/v132/dice-app.js');
+else if(variant==='dice-v131')await import('./versions/v131/dice-app.js');
+else if(variant==='dice-old')await import('./dice-legacy-app.js');
+else await import('./app.js');

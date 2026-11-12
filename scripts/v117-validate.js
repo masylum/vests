@@ -1,0 +1,5 @@
+import fs from'node:fs';import path from'node:path';import{parallel}from'./parallel.js';import{createHash}from'node:crypto';
+const out=path.resolve('docs/v117-validation'),source=out+'/source';fs.mkdirSync(source,{recursive:true});const hashes={};for(const f of fs.readdirSync('src').filter(f=>/\.(js|css)$/.test(f))){const b=fs.readFileSync('src/'+f);if(fs.existsSync(source+'/'+f)&&!fs.readFileSync(source+'/'+f).equals(b))throw Error('Frozen source changed');fs.writeFileSync(source+'/'+f,b);hashes[f]=createHash('sha256').update(b).digest('hex');}
+const jobs=[{id:'previous-one-round-4p',players:4,seed:116404},{id:'previous-one-round-2p',players:2,seed:116203}].map(j=>({...j,source,out,samples:24,health:true,trace:true}));
+fs.writeFileSync(out+'/manifest.json',JSON.stringify({version:117,purpose:'Targeted regression validation, not a game-health study',hashes,jobs},null,2));
+const rows=await parallel(jobs,{moduleURL:new URL('./health-game.js',import.meta.url),workers:2,onResult:r=>console.log(r.id,r.status,r.roundCount,r.error??'')});fs.writeFileSync(out+'/results.json',JSON.stringify(rows,null,2));

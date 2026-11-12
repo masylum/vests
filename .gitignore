@@ -5,9 +5,68 @@ node_modules/
 native/build/
 
 # Local reports and tournament archives. Required test fixtures are already tracked.
-/docs/
+/docs/*
+!/docs/v98-rules.md
+!/docs/v101-rules.md
 
 # Cloudflare generated assets and local runtime state.
 /dist/
 /.wrangler/
 /worker-configuration.d.ts
+
+!docs/v102-rules.md
+
+!docs/v103-rules.md
+
+!docs/v104-rules.md
+
+!docs/v105-rules.md
+
+!docs/v106-rules.md
+
+!docs/v107-rules.md
+
+!docs/v108-rules.md
+
+!docs/v109-rules.md
+
+!docs/v110-rules.md
+
+!docs/v111-rules.md
+
+!docs/v112-rules.md
+!docs/v113-rules.md
+
+!docs/v114-copy-review.md
+
+!docs/v115-rules.md
+
+!docs/v116-rules.md
+
+!docs/v117-rules.md
+
+!docs/v119-rules.md
+
+# Alternative dice rules and reviewed study notes (bulk artifacts stay local).
+!docs/dice-rules.md
+!docs/dice-study-reviews.json
+!docs/dice-study-summary.md
+!docs/dice-pacing-summary.md
+!docs/dice-pacing-reviews.json
+!docs/dice-rules-v130.md
+!docs/dice-live-summary.md
+
+!docs/dice-rules-v131.md
+!docs/dice-round-summary.md
+
+!docs/dice-rules-v132.md
+!docs/dice-finite-summary.md
+!docs/dice-finite-reviews.json
+
+!docs/dice-scarcity-summary.md
+
+!docs/dice-flow-summary.md
+
+# Python report-generator caches.
+__pycache__/
+*.py[cod]

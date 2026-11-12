@@ -1,0 +1,172 @@
+/* Dice-specific additions; the table, typography, cards and drawer use classic styles. */
+.dice-app .deal-hand{display:flex;gap:6px;align-items:center;justify-content:center;flex:0 0 36px}
+.dice-app .deal-card{border-top:4px solid var(--company)}
+.dice-app .deal-card.selected{outline:2px solid #111;outline-offset:1px}
+.dice-app .decision-content>h2{margin:2px 0;font-size:18px}
+.dice-app .decision-content>p{margin:5px 0;font-size:12px}
+.dice-app .decision-content select{max-width:100%}
+.dice-app .dice-holding{display:flex;align-items:center;gap:2px;font-size:13px}
+.dice-app .company .shareholders{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+
+.dice-app .score-grid{display:flex;gap:12px}.dice-app .score-grid article{flex:1;display:grid;gap:4px}.dice-app .score-grid strong{font-size:24px}.dice-app .score-grid small{font-size:11px}
+.dice-dialog .catalogue{display:flex;justify-content:center;gap:24px;padding:20px 0;min-height:300px}.dice-dialog .catalogue>.founder-card,.dice-dialog .catalogue>.intel-card{--card-width:180px;width:180px;flex:none}
+.dice-dialog nav,.dice-dialog footer{display:flex;justify-content:space-between;gap:8px}.dice-dialog .catalogue>article:only-child:not(.founder-card):not(.intel-card){max-width:650px}
+.dice-inspector{display:flex;justify-content:center;padding:20px}.dice-inspector>article{--card-width:280px;width:280px}
+.dice-dialog form{display:flex;flex-wrap:wrap;gap:16px;align-items:end}.dice-dialog form label{display:grid;gap:6px}.dice-dialog input{max-width:160px}
+.dice-app [hidden]{display:none}
+.dice-app .dice-decision{height:180px;flex:0 0 180px}.dice-app .deal-hand{flex-basis:28px;min-height:28px}.dice-app .deal-card{padding:2px 7px;font-size:10px}
+.dice-app .dice-decision{min-height:180px;max-height:180px}
+.live-dice-app .dice-picks {display:flex;gap:12px;justify-content:center}
+.live-dice-app .dice-picks label {display:flex;align-items:center;gap:6px;font-size:12px}
+.live-dice-app .dice-picks select {max-width:230px;font-size:12px}
+.live-dice-app .deal-hand .deal-card {flex:0 1 100px;min-width:0}
+
+.live-dice-app #app .dice-decision{height:200px;flex-basis:200px;min-height:200px;max-height:200px}
+.live-dice-app #app .decision .decision-content>h2{font-size:16px;line-height:22px;margin:0 0 3px}
+.live-dice-app #app .decision .decision-content>p{line-height:15px;margin:3px 0}
+.live-dice-app #app .decision .decision-content{scrollbar-gutter:auto}
+
+.live-dice-app .dice-picks select{padding:4px}
+.live-dice-app #app .deal-hand{flex-basis:36px;min-height:36px;gap:4px}
+.live-dice-app #app .deal-hand button{min-height:28px;line-height:14px;padding:3px 5px;font-size:10px;white-space:nowrap}
+.live-dice-app #app .decision .decision-actions:empty{min-height:0;height:0;padding:0;border:0}
+.live-dice-app .score-grid{gap:8px}
+.live-dice-app .score-grid b{font-size:12px;line-height:15px}
+@media(max-width:1100px){
+ .live-dice-app #app>.top{height:76px;min-height:76px;display:grid;grid-template-columns:260px 1fr;grid-template-rows:30px 38px;gap:4px}
+ .live-dice-app #app>.top .status{justify-self:end;white-space:nowrap}
+ .live-dice-app #app>.top nav{grid-column:1 / -1;justify-content:flex-end}
+ .live-dice-app #app>.top nav button{white-space:nowrap;padding:6px 10px}
+}
+.mild-dice-app #app .dice-decision{display:grid;grid-template-columns:250px minmax(0,1fr);grid-template-rows:1fr auto;column-gap:20px;padding:12px 16px}
+.mild-dice-app #app .deal-hand{grid-column:1;grid-row:1/span 2;display:block;align-self:stretch;border-right:1px solid #bcb5a5;padding-right:16px}
+.mild-dice-app #app .deal-hand h3{font-size:14px;margin:0 0 10px}
+.mild-dice-app #app .deal-groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.mild-dice-app #app .deal-hand button{font-size:12px;white-space:normal;opacity:1}
+.mild-dice-app #app .deal-hand button:disabled{color:#514d40}
+.mild-dice-app #app .decision-content{grid-column:2;grid-row:1;min-height:0}
+.mild-dice-app #app .decision-actions{grid-column:2;grid-row:2}
+.mild-dice-app #app .deal-hand button{min-height:32px}
+.mild-dice-app #app .decision-content{overflow:visible}
+.mild-dice-app #app .reaction-timeline{margin:4px 0;padding:0;list-style:none}
+.mild-dice-app #app .reaction-timeline>li{display:flex;gap:12px;align-items:center;min-height:88px}
+.mild-dice-app #app .reaction-timeline>li[hidden],.dice-dialog [hidden]{display:none!important}
+.mild-dice-app #app .effect-results{flex:1;min-width:0}
+.mild-dice-app #app .effect-results p{margin:3px 0;font-size:13px}
+.effect-pages{display:flex;align-items:center;justify-content:center;gap:12px}
+.effect-pages button{padding:3px 8px;font-size:12px}
+.mild-dice-app #app .value-receipt{display:flex;gap:12px;align-items:center}
+.mild-dice-app #app .value-receipt>.intel-card{width:65px;height:91px;min-height:91px;flex:none}
+.mild-dice-app #app .value-receipt>.intel-card p{display:none}
+.mild-dice-app #app .value-receipt>.intel-card h3{font-size:9px}
+.dice-dialog .history-event{height:340px;display:flex;flex-direction:column;justify-content:center;gap:12px}
+.dice-dialog .history-event .reaction-timeline{list-style:none;padding:0;margin:0}
+.dice-dialog .history-event .reaction-timeline>li{display:flex;gap:20px;align-items:center}
+.dice-dialog .history-event :is(.founder-card,.intel-card){width:130px;height:182px;min-height:182px;flex:none}
+.dice-dialog .history-event .effect-results{flex:1}
+.dice-dialog .history-dice{display:flex;gap:10px;align-items:center}
+
+
+.mild-dice-app #app .decision .receipt-founder{width:65px;height:91px;min-height:91px}
+.mild-dice-app #app .decision .receipt-founder .founder-copy p{display:none}
+.mild-dice-app #app .decision .receipt-founder .founder-copy small{font-size:9px}
+.mild-dice-app #app .roll-result{display:grid;grid-template-columns:minmax(230px,1fr) minmax(0,1fr);gap:12px;align-items:start}
+.mild-dice-app #app .roll-result h2{margin:0;font-size:17px}
+.mild-dice-app #app .roll-result p{font-size:12px;margin:4px 0}
+.mild-dice-app #app .decision .reaction-timeline>li{min-height:96px;height:auto;padding:5px;grid-template-columns:none;box-sizing:border-box}
+.mild-dice-app #app .decision .reaction-timeline :is(.founder-card,.intel-card){width:60px!important;height:84px!important;min-height:84px!important;max-height:84px;flex:0 0 60px;transform:none;padding:3px;box-sizing:border-box}
+.mild-dice-app #app .decision .reaction-timeline :is(.founder-face,.value-art){height:42px!important;min-height:42px!important;max-height:42px!important;width:100%}
+.mild-dice-app #app .decision .reaction-timeline :is(.founder-copy p,.intel-card p){display:none!important}
+.mild-dice-app #app .decision .reaction-timeline :is(.founder-copy small,.intel-card h3){font-size:9px;line-height:10px}
+.mild-dice-app #app .decision .reaction-timeline .effect-results{padding:0}
+.mild-dice-app #app .dice-decision{height:220px;min-height:220px;max-height:220px;flex-basis:220px}
+.mild-dice-app #app .value-receipt{width:100%}
+.mild-dice-app #app .value-receipt>div{flex:1;min-width:0}
+.mild-dice-app #app .decision .effect-results{display:flex;align-items:center;gap:12px}
+.mild-dice-app #app .decision .effect-results>.round-track{flex:1;min-width:0}
+.mild-dice-app #app .decision .effect-results>section{flex:1;min-width:0}
+
+/* Table geometry is defined once here. Mats stay within the track's inner lane. */
+.mild-dice-app #app .game-layout{grid-template-columns:170px minmax(0,1fr) 170px;gap:16px;align-items:center}
+.mild-dice-app #app .game-layout :is(.intel-hand,.founder-market){width:170px;height:900px}
+.mild-dice-app #app .game-layout :is(.intel-hand,.founder-market) h2{font-size:16px;line-height:20px;height:20px;margin:0 0 8px}
+.mild-dice-app #app .game-layout :is(.market-cards,.intel-hand>.intel-cards){display:grid;grid-template-columns:150px;grid-template-rows:repeat(4,210px);gap:8px;justify-content:center;align-content:start}
+.mild-dice-app #app .game-layout :is(.intel-hand .intel-card,.founder-market .founder-card){display:flex;flex-direction:column;width:150px;height:210px;min-height:210px;aspect-ratio:5/7;padding:5px;gap:0;transform:none;box-sizing:border-box}
+.mild-dice-app #app .game-layout :is(.founder-market .founder-face,.intel-hand .value-art){width:100%;height:68px;min-height:68px;max-height:68px;object-fit:cover;flex:none;margin:0}
+.mild-dice-app #app .game-layout :is(.founder-market .founder-copy small,.intel-hand .intel-card h3){font-size:13px;line-height:1.1;margin:4px 0}
+.mild-dice-app #app .game-layout :is(.founder-market .founder-copy p,.intel-hand .intel-card p){font-size:13px;line-height:1.15;display:block;overflow:visible;margin:0;-webkit-line-clamp:unset}
+.mild-dice-app #app .game-layout :is(.board-column,.table-layout,.board-scroll,.board){height:780px;min-height:780px;max-height:780px}
+.mild-dice-app #app .game-layout .board{padding:120px 110px;box-sizing:border-box}
+.mild-dice-app #app .game-layout :is(.centre,.companies){height:540px;min-height:540px;max-height:540px;box-sizing:border-box}
+.mild-dice-app #app .game-layout .companies{grid-template-columns:repeat(var(--company-cols,3),minmax(0,1fr));grid-template-rows:repeat(2,246px);gap:18px;align-content:center}
+.mild-dice-app #app .game-layout .company{height:246px;min-height:246px;max-height:246px;grid-template-columns:140px minmax(0,1fr);grid-template-rows:32px 190px;padding:10px;gap:0 10px;box-sizing:border-box;transform:none}
+.mild-dice-app #app .game-layout .company>.founder-card{width:140px;height:222px;min-height:222px;grid-column:1;grid-row:1/span 2;box-sizing:border-box}
+.mild-dice-app #app .game-layout .company>.company-details{height:190px;min-height:0;grid-column:2;grid-row:2}
+.mild-dice-app #app .game-layout .company>header{grid-column:2;grid-row:1;height:32px;min-height:32px}
+.mild-dice-app #app .game-layout .company>header h3{font-size:18px}
+.mild-dice-app #app .game-layout .company .founder-copy p{font-size:12px;line-height:1.2}
+.mild-dice-app #app .game-layout .company .founder-copy small{font-size:14px}
+.mild-dice-app #app .game-layout .start-area{position:absolute;height:24px;min-height:0}
+.mild-dice-app #app>.funds .fund small{font-size:11px;line-height:13px}
+.mild-dice-app #app .decision .auction-receipt{padding:0}
+.mild-dice-app #app .decision .receipt-heading h2{font-size:22px;margin:3px 0}
+.mild-dice-app #app .decision .receipt-heading small{font-size:13px}
+.mild-dice-app #app .decision .bids{gap:8px;margin:7px 0;display:flex}
+.mild-dice-app #app .decision .bids article{flex:1;padding:6px 9px;min-width:0}
+.mild-dice-app #app .decision .bids strong{font-size:21px}
+.mild-dice-app #app .decision .bids span{font-size:12px}
+.mild-dice-app #app .decision .auction-detail{font-size:12px;margin:4px 0}
+.mild-dice-app #app .decision .founder-options{display:flex;gap:10px;height:130px;align-items:flex-start}
+.mild-dice-app #app .decision .founder-options article{display:flex;align-items:center;gap:5px;flex:1;min-width:0}
+.mild-dice-app #app .decision .founder-options button{font-size:11px;padding:5px;white-space:normal}
+.mild-dice-app #app .decision .founder-options .founder-card,.mild-dice-app #app .decision .power-prompt>.founder-card{width:80px;height:112px;min-height:112px;flex:0 0 80px;--card-width:80px}
+.mild-dice-app #app .decision .founder-options .founder-copy p,.mild-dice-app #app .decision .power-prompt .founder-copy p{display:none}
+.mild-dice-app #app .decision .power-prompt{display:flex;gap:12px;align-items:center;margin:5px 0}
+.mild-dice-app #app .decision .power-prompt p{font-size:14px}
+.mild-dice-app #app .decision .power-prompt small{font-size:10px}
+.mild-dice-app #app .decision .receipt-footer:empty{display:none}
+.mild-dice-app #app .decision .founder-options>article{display:flex}
+.mild-dice-app #app .decision .founder-options .founder-card{display:block}
+.mild-dice-app #app .decision .value-selection{display:block;max-width:100%}
+.mild-dice-app #app .decision .value-selection p{font-size:14px;margin:5px 0 10px}
+.mild-dice-app #app .decision .founder-options{overflow:visible;max-height:none;min-height:0;padding:0;flex-wrap:nowrap}
+.mild-dice-app #app .decision .founder-options>article{flex-direction:row;justify-content:flex-start;align-items:center;height:120px;overflow:visible}
+.mild-dice-app .visual-die{display:inline-grid;grid-template:repeat(3,1fr)/repeat(3,1fr);gap:3px;width:38px;height:38px;padding:7px;box-sizing:border-box;border:2px solid #183b58;border-radius:8px;background:#8dc9ed;color:#17334d;vertical-align:middle;box-shadow:0 2px 0 #183b5833}
+.mild-dice-app .visual-die.mild{background:#ffe16a;border-color:#826615;color:#4c3b0a}
+.mild-dice-app .visual-die i{display:block;border-radius:50%}.mild-dice-app .visual-die .pip{background:currentColor}
+.mild-dice-app .visual-die b{grid-area:1/1/4/4;align-self:center;justify-self:center;font-size:26px;line-height:1}
+.mild-dice-app .visual-die .zero-face{font-size:20px}
+.mild-dice-app .queued-die{opacity:.45}.mild-dice-app .queued-die.next-die{opacity:1}
+.mild-dice-app .fund-token,.mild-dice-app #app .company .lead-token:not(.empty){display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;width:30px;height:30px;flex:0 0 30px;padding:5px;border:2px solid var(--fund-color);border-radius:50%;background:#fff;color:var(--fund-color);vertical-align:middle}
+.mild-dice-app .fund-token .investor-icon,.mild-dice-app #app .company .lead-token .investor-icon{width:100%;height:100%;max-width:100%;max-height:100%;margin:0;transform:none}
+.mild-dice-app #app .fund header b{display:flex;align-items:center;gap:5px}.mild-dice-app #app .fund header .fund-token{width:23px;height:23px;flex-basis:23px;padding:3px}
+.mild-dice-app .private-money{font-size:11px;color:#777}
+.mild-dice-app #app .decision .played-rule{font-size:14px;line-height:19px;margin:5px 0 8px;max-width:100%}
+.mild-dice-app #app .decision .value-card-picker{display:flex;gap:5px;align-items:center;margin:4px 0}
+.mild-dice-app #app .decision .value-card-picker button{font-size:12px;padding:5px 8px;white-space:normal;flex:1}
+.mild-dice-app #app .decision .selected{background:#ffe16a;border-color:#222}
+.mild-dice-app #app .decision .value-targets{display:flex;gap:16px;align-items:center}
+.mild-dice-app #app .decision .value-targets label{display:flex;gap:7px;align-items:center;font-size:13px}
+.mild-dice-app #app .decision .value-targets select{font-size:13px;padding:5px;max-width:240px}
+.mild-dice-app #app .decision.settlement-drawer{grid-template-columns:minmax(0,1fr)}
+.mild-dice-app #app .settlement-drawer .deal-hand{display:none}
+.mild-dice-app #app .settlement-drawer .decision-content{grid-column:1}
+.mild-dice-app #app .settlement-drawer .score-grid{display:flex;gap:8px;margin:4px 0}
+.mild-dice-app #app .settlement-drawer .score-grid button{flex:1;display:flex;gap:7px;align-items:center;justify-content:center;font-size:12px;padding:4px}
+.mild-dice-app #app .settlement-drawer .score-grid strong{font-size:20px}
+.mild-dice-app #app .portfolio-return{width:100%;border-collapse:collapse;text-align:center;font-size:13px}
+.mild-dice-app #app .portfolio-return th{padding:4px 2px}.mild-dice-app #app .portfolio-return td{border-top:1px solid #ddd;padding:4px}
+.mild-dice-app #app .portfolio-return strong{display:block;font-size:21px}.mild-dice-app #app .portfolio-return small{font-size:11px}
+.mild-dice-app #app .decision .settlement-total{font-size:13px;text-align:center;margin:5px 0}
+.mild-dice-app #app>.funds{height:72px;min-height:72px;flex-basis:72px}
+.mild-dice-app #app>.funds .fund{padding:6px 10px}
+.mild-dice-app #app .decision .decision-actions .effect-pages{margin-right:auto}
+.mild-dice-app #app .decision .decision-content>.played-rule{font-size:14px;line-height:18px;margin:4px 0 7px}
+.mild-dice-app #app .decision .value-receipt .reaction-timeline>li{min-height:90px;padding:3px}
+/* Space zero belongs in the inner bottom margin, never on a company mat. */
+.mild-dice-app #app .game-layout .start-area{bottom:-18px;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:7px;font-size:12px}
+
+.mild-dice-app #app .secret-investment{width:150px;height:210px;box-sizing:border-box;padding:10px;border:2px solid #243e35;border-radius:10px;background:#fff;display:flex;flex-direction:column;justify-content:center;gap:18px;text-align:left;white-space:normal;color:#17251f;}
+.mild-dice-app #app .secret-investment strong{display:flex;align-items:baseline;justify-content:space-between;gap:6px;font-size:18px;line-height:1.2;white-space:nowrap;}
+.mild-dice-app #app .secret-investment b{font-size:18px;color:inherit;}
+.mild-dice-app #app .secret-investment .bonus-title{font-size:18px;font-weight:800;line-height:1.2;}

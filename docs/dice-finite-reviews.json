@@ -1,0 +1,62 @@
+[
+  [
+    3001,
+    "Scarcity redirects funding",
+    "Company 3 uses all four funding cards by E81 and cannot be called again. Later calls lift companies 4 and 1; E234 Focused moves company 1 to 15 and company 3 back to 9. Company 0 finishes at 1 because all its cards bought other actions. P1 wins 28\u201316 after 24 actions.",
+    "At E241\u2013252 / D146\u2013154 a late share in company 2 is bought for $1 although it finally pays $0. Passing the bid would preserve cash. The heuristic values future growth beyond the finite horizon: bot limitation, not a supply failure."
+  ],
+  [
+    3002,
+    "Funding spreads, productive movement does not",
+    "Calls reach all six companies (4,3,3,3,2,4). Company 5 stays at 17 after its last call because recovery consumes movement; five companies pay zero. Conflict at E264 knocks company 0 below the payout threshold. P0 wins 25\u201324\u201313.",
+    "Random P1 hires Gill at E280 / D189 with no subsequent reveal, instead of using the last company-3 card to fund or another legal action. This is a deliberately weak random policy; it should not be interpreted as optimal finite-deck play."
+  ],
+  [
+    3003,
+    "Value cards bypass the funding cap",
+    "Company 5 exhausts four funding cards by E88, but Sweat at E118\u2013121 issues another share and reveal using another company's card. Danilo later follows company 2's six-space move at E199. Three leaders end at 19,19,18, while company 1 remains at 1 after all its cards are discarded. P0 wins 56\u201348\u201337\u201330.",
+    "D166 bids $15 for company 3 and pays $12, but its final reveal merely recovers and its share exits at $6. A lower bid or pass avoids that terminal overpayment. Finite-horizon auction valuation remains a bot limitation."
+  ],
+  [
+    3004,
+    "Four cards can still produce a runaway",
+    "Company 5 starts at 4 with Dan. Four calls (E20,32,50,95), Gill, once-per-round Ryan/Dan and Focused reach 24 in nine actions. Other-company calls also trigger its founder movement. P1 wins 69\u201334; the funding cap is respected.",
+    "P0's recovery purchase in company 2 also advances the opponent's Dan at E66. Calling capital instead avoids that reveal. The bot does not fully price the global finishing threat. This is also a genuine rules-level bypass of company-specific scarcity."
+  ],
+  [
+    3005,
+    "Exhausted early leader is overtaken",
+    "Company 0 consumes all four calls by E65, reaches 19, then finishes tied with company 1 at 17. Focused and swaps at E173\u2013183 move the contest toward company 1. Company 2 receives zero calls and is pushed to 0. P1 wins 38\u201332\u201330.",
+    "Random P2 replaces a founder at E226 / D146, the penultimate action, with no remaining reveal. Funding its remaining company-5 card was an available alternative. The late hire is a policy weakness, not an engine fault; public Sweat at E157 is a separate legal cap bypass."
+  ],
+  [
+    3006,
+    "Close scores despite a wide company range",
+    "Company 1 leads at 19; company 5 gets four calls and reaches 16 before Conflict drops it to 14. Company 2 has no funding and stays at 1. Last-round Conflict/Dividend reduce company 4 from 17 to 13. P0 and P3 tie at 30, ahead of 27 and 27: close player scores do not imply close companies.",
+    "Random P1 replaces a founder at E220 / D155 immediately before three value actions and settlement. Its discarded company-1 card could instead have funded that company. The hire produces no later reveal benefit, illustrating terminal policy weakness."
+  ],
+  [
+    3007,
+    "Discarding entire companies prevents catch-up",
+    "Companies 0 and 1 receive no calls and remain at 1. Company 4 uses four calls, but fumbles and Dividend prevent sustained progress; late calls move company 5 to 17, then Focused at E227 redistributes two spaces. P1 wins 30\u20133, final positions 1,1,11,6,11,15.",
+    "Random P0 ends with Session (E228\u2013232 / D134), replacing and fumbling a founder with no further reveal. Funding the remaining company-5 card was available. Random bidding and this terminal use are policy weaknesses; a finite deck cannot force players to fund discarded companies."
+  ],
+  [
+    3008,
+    "Four companies finish close",
+    "Calls exhaust companies 0,2,5. Fumbles consume several reveals, but late funding and swaps yield four companies at 11,11,11,15. Company 3 receives no calls, after Dividend moves it to zero in the opening round. P2 wins 32\u201327\u201323.",
+    "Growth P1 buys the final company-5 share at D168, paying $3 for a share that finally pays $1. Gill also helps company 2. A lower bid avoids the standalone overpayment; portfolio effects complicate its total value. This points to horizon-aware bidding, not a deck conservation error."
+  ],
+  [
+    3009,
+    "A paid share can be erased by value effects",
+    "Company 2 gets all four calls and an additional Sweat reveal, but two Focused plays at E177 and E207 move it from 14 to 10 while helping company 1. Company 5 has no calls. P1 wins 34; final positions 8,13,10,17,5,5.",
+    "Random P2 bids $16 at D159 and pays $9 for the final company-3 share, which exits at $6. Passing or bidding at most its terminal incremental value preserves cash. The supply cap cannot prevent negative movements or random overbidding."
+  ],
+  [
+    3010,
+    "Even call counts do not guarantee equal exits",
+    "Five companies receive exactly two calls each. Company 0 also benefits from Sweat, Gill, Focused and Melania, reaching 17 while all others finish at 10 or below. Company 3's four cards fund other actions. P0 wins 59\u201320.",
+    "Random P1 pays $12 in the Public auction at D129; the reveal only recovers company 1. Its later final purchase also spends movement recovering after its own optional founder fumble (D142), ending at 10 and paying zero. Passing the optional power or auction are alternatives. The unchanged policy is not finite-horizon optimal; public issuance and founder movement weaken scarcity's link to position."
+  ]
+]

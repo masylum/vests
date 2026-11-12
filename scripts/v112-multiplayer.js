@@ -1,0 +1,5 @@
+import fs from'node:fs';import path from'node:path';import{parallel}from'./parallel.js';
+const out=path.resolve('docs/v112-release'),jobs=[];
+for(const players of [3,4])for(let i=0;i<12;i++)for(let seat=0;seat<players;seat++)jobs.push({id:`extra-${players}-${i}-${seat}`,variant:'multiplayer',players,seed:117100+players*100+i,samples:24,source:out+'/source',botSource:out+'/baseline',baselineSeats:Array.from({length:players},(_,s)=>s).filter(s=>s!==seat),newSeat:seat,out,health:true});
+fs.writeFileSync(out+'/multiplayer-protocol.json',JSON.stringify({reason:'Fixed additional 12 setup seeds at each multiplayer count, planned after main multiplayer completed at 18/36 and 18/48 wins. No source changes. Complete every job regardless of result; treat multiplayer inference as exploratory.',jobs},null,2));
+await parallel(jobs,{moduleURL:new URL('./health-game.js',import.meta.url),workers:4,onResult:r=>{fs.appendFileSync(out+'/multiplayer.jsonl',JSON.stringify(r)+'\n');console.log(r.id,r.status);}});

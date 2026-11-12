@@ -1,0 +1,142 @@
+[
+  {
+    "seed": 4000,
+    "version": "130-dice-preview",
+    "actions": 80,
+    "rolls": 87,
+    "auctions": 62,
+    "scores": [
+      78,
+      132,
+      64,
+      107
+    ],
+    "review": "80 normal actions, 62 auctions, 87 dice over four rounds. Growth policy p1 wins 132 after $50 called capital; random p3 scores 107. Early second-price auctions A1–A14 sell mostly for $1–$2 despite random bids reaching $8. Later growth purchases concentrate in c3/c4: by D402 c3 reaches 24, yet further funding and dice continue there. At D498 p1 calls funding with $0 rather than raising capital; others still buy. The policy cannot replenish in round four, although capital is legal. Three companies finish. This supports low ceilings and late liquidity as separate causes of compressed prices; repeated rolls at 24 also add workload. Classification: bot limitation and pacing hypothesis, no replay/accounting defect."
+  },
+  {
+    "seed": 4001,
+    "version": "130-dice-preview",
+    "actions": 80,
+    "rolls": 75,
+    "auctions": 53,
+    "scores": [
+      234,
+      100,
+      128,
+      142
+    ],
+    "review": "80 normal actions, 53 auctions, 75 dice over four rounds. Growth p0 wins 234, borrowing $60 over the game and receiving $294 in exits. Round-three A22/A23 cost $9/$8, while by D481–D497 every investor has $0 and three auctions fail. Calling capital was a legal alternative; the bot’s remaining-round condition prevents deliberate final-round replenishment. Founder decisions at D501–D506 join/fumble c4/c5, then recovery consumes their first dice; both reach 24 later at D519–D521. Thus the higher ceiling broadens early prices but does not prevent endgame price collapse. Classification: bot liquidity limitation. These failed auctions still consume actions and cannot count as pacing gains."
+  },
+  {
+    "seed": 4002,
+    "version": "130-dice-preview",
+    "actions": 48,
+    "rolls": 76,
+    "auctions": 25,
+    "scores": [
+      38,
+      149,
+      148,
+      196
+    ],
+    "review": "48 normal actions, 25 auctions, 76 dice over four rounds. Growth p3 wins 196 with $70 capital called; saver p0 ends with untouched $20 and only $18 payouts. At D111–D116 a share in c3 costs $16, with both growth and balanced offering their available $16; the saver’s ceiling is $10. Six c3 dice at D78–D92 move it from 4 to 19, and centre growth reaches 24 in round two. It later falls to 22 through Focused Execution at D313 and exits at 23, showing why reaching the end does not lock in the payout. At D136 growth calls a third round-two capital action while its recorded threshold is $22. This is broad bidding but also a costly action tradeoff. Classification: plausible short-game economy, limited fixed forecast; not proof of optimal capital use."
+  },
+  {
+    "seed": 4003,
+    "version": "130-dice-preview",
+    "actions": 48,
+    "rolls": 98,
+    "auctions": 35,
+    "scores": [
+      107,
+      66,
+      81,
+      41
+    ],
+    "review": "48 normal actions, 35 auctions, 98 dice over four rounds. Random p0 wins 107; growth p2 scores 81. Random wins the first nine auctions for mostly $1–$2 (A0–A8), building the portfolio before two-die growth accelerates c3 to 24 in round two. At D249 random raises capital despite $4 cash and a $5 recorded threshold; it later repeatedly replaces c1’s founder using the first market slot, without a valuation of alternatives. Growth spends all cash on c3/c5 at D236–D268 and replenishes, while saver keeps $20 until the last round. Four companies finish, but many round-four rolls already start at 24. Classification: underbidding/weak founder-choice policy and wasted-resolution pacing hypothesis. The random win warns against treating these bots as strong strategists."
+  },
+  {
+    "seed": 4004,
+    "version": "130-dice-preview",
+    "actions": 48,
+    "rolls": 84,
+    "auctions": 29,
+    "scores": [
+      116,
+      156,
+      131,
+      131
+    ],
+    "review": "48 normal actions, 29 auctions, 84 dice over four rounds. Growth p1 wins 156 after $50 calls; balanced scores 116, saver and random tie at 131. Early cheap shares and later capital finance growth’s c0/c4 portfolio. D203 shows balanced calling capital at $4 versus threshold $8, while D204 growth calls at $13 versus threshold $15. Prices reach $11 at A14; saver waits until cash-poor rivals allow five purchases at $5 each (A19–A23). c3 is almost unfunded and exits at space 2 while four other companies reach 24, so two dice do not guarantee uniform progress. Rights Issue at D112 sells a share for $1 and grants two dice at D154–D156. Classification: meaningful liquidity/portfolio interactions under limited bidding, no engine issue."
+  },
+  {
+    "seed": 4005,
+    "version": "130-dice-preview",
+    "actions": 48,
+    "rolls": 86,
+    "auctions": 30,
+    "scores": [
+      183,
+      162,
+      182,
+      202
+    ],
+    "review": "48 normal actions, 30 auctions, 86 dice over four rounds. Balanced p3 wins 202, ahead of growth p0 at 183 and random p2 at 182. In round two growth spends all three actions on capital (D124, D138, D152), enabling the $11 purchase A11; this demonstrates the action cost of tripled payouts in a 48-action game. c5 reaches 24 at D177, then continues attracting $10 purchases. The saver later buys c3 for $1 at A26/A28/A29 while rivals are cash-poor; its two-die entitlements help c3 reach 24 at D370, and saver finishes 162. Classification: plausible rule tradeoff plus fixed-forecast limitation. Large nominal ceilings spread some prices but still produce very cheap late sales."
+  },
+  {
+    "seed": 4006,
+    "version": "130-dice-preview",
+    "actions": 48,
+    "rolls": 90,
+    "auctions": 32,
+    "scores": [
+      32,
+      69,
+      63,
+      107
+    ],
+    "review": "48 normal actions, 32 auctions, 90 dice over four rounds. Growth p3 wins 107, random p1 scores 69, saver p0 only 32. Saver never buys an auction share and retains $20; its low fixed discount is too timid here. Growth’s round-two Paid Advice actions D129/D147 generate cash and movement, followed by Sweat Equity D168 for a free two-die share. Round three growth uses every action on capital at D249/D270/D284 to keep bidding. Despite an insurance/setback sequence in round four, c5 recovers and returns to 24 at D417. Four companies finish. Classification: bid-policy limitation, not evidence that saving can never work. Repeated calls consume a large fraction of the shorter action budget."
+  },
+  {
+    "seed": 4007,
+    "version": "130-dice-preview",
+    "actions": 48,
+    "rolls": 86,
+    "auctions": 30,
+    "scores": [
+      117,
+      100,
+      161,
+      107
+    ],
+    "review": "48 normal actions, 30 auctions, 86 dice over four rounds. Growth p2 wins 161 with $60 capital called; random p0 scores 117. At D132/D146/D165 and again D208/D227/D242 growth spends all its round-two and round-three actions on capital while buying shares initiated by opponents. This is legal because funding callers do not have to win, and other investors keep offering its preferred companies. By round four, several buyers are exhausted: A27–A29 sell for $1 despite $16 maximum exits. Founder and value effects move c2 from 14 to 17 before the last growth phase; two-die shares take it to 24 by D369. Three finishers. Classification: policy interaction and caller incentives worth testing with stronger opponents; no blanket balance conclusion."
+  },
+  {
+    "seed": 4008,
+    "version": "130-dice-preview",
+    "actions": 48,
+    "rolls": 84,
+    "auctions": 30,
+    "scores": [
+      210,
+      253,
+      131,
+      151
+    ],
+    "review": "48 normal actions, 30 auctions, 84 dice over four rounds. Growth p1 wins 253 after $80 capital called; balanced p0 scores 210. Growth has only four funding actions and uses the other eight normal actions for capital, while acquiring shares from others’ calls. A14 costs $14, but late A24–A29 collapse to $2 as two competitors run dry. Random p3 still holds $36 at exit while its random bid ceiling remains $8; this cap is deliberately unchanged across multipliers and is a major limitation of the triple-payout comparison. At D369 a c5 roll reaches 24 and triggers a further $2 founder payment. Four companies finish. Classification: strong bot-cap confound, capital/caller incentive hypothesis; tripled nominal scores alone do not establish better play."
+  },
+  {
+    "seed": 4009,
+    "version": "130-dice-preview",
+    "actions": 48,
+    "rolls": 98,
+    "auctions": 36,
+    "scores": [
+      111,
+      47,
+      96,
+      60
+    ],
+    "review": "48 normal actions, 36 auctions, 98 dice over four rounds. Growth p0 wins 111, random p2 96, balanced p3 60, saver p1 47. Ten round-one auctions sell for $1–$4. c3 reaches 24 in round two at D211, but p1’s late Portfolio Rebalance at D405 swaps it back to 21 while moving c1 to 24; growth’s next c3 die immediately returns it to 24 (D416). Saver keeps substantial cash and finally buys at $1/$2 in A33/A34, but owns too little to catch up. At D398 growth calls funding with no cash rather than capital, still granting someone else a purchase. Four finishers, with many capped late rolls. Classification: bot limitation and potential redundant-growth overhead, not an engine defect."
+  }
+]

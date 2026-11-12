@@ -1,0 +1,111 @@
+[
+  {
+    "game": 1,
+    "classification": "Bot limitation",
+    "review": "Seed 2000, two players: growth wins 87\u201371 after four rounds, with no company at 24. D90, D141 and D154 call $30, which is fully deducted from the winner\u2019s $117 share payout. In round four both players run out of cash; D213\u2013231 initiate five auctions with no positive bid. Calling capital was a legal alternative, but the policy disallows planned capital calls in its final round. This is wasted action selection, not an engine stall. Early dividend/advice plays (E13, E21) supplied cash while preserving shares. The result illustrates why all-company payouts make a four-round ending workable even without finishers.",
+    "seed": 2000,
+    "scores": [
+      71,
+      87
+    ]
+  },
+  {
+    "game": 2,
+    "classification": "Bot limitation",
+    "review": "Seed 2001, three players: growth wins 121, ahead of random 86 and saver 77. Random captures most first-round auctions with offers above the others\u2019 $1\u2013$3 bids while paying the second price. Its repeated founder changes at D136, D148 and D161 consume actions without an evaluated replacement search. Growth accumulates Amazin at D115\u2013145; it reaches 24 at D362. Saver buys several late shares after growth exhausts its cash, including D294 and D304. Random\u2019s extra capital at D342 is repaid in full. Cheap early shares and unplanned founder selection explain the competitive random baseline; neither establishes a founder balance ranking.",
+    "seed": 2001,
+    "scores": [
+      121,
+      77,
+      86
+    ]
+  },
+  {
+    "game": 3,
+    "classification": "Bot limitation / economic hypothesis",
+    "review": "Seed 2002, four players: growth wins 144, random 117, balanced 88, saver 47. Growth repeatedly pays $2 in round two (D167\u2013211) for future growth and ownership, then earns $12 from Secondary Sale at D238. Its $20 called capital is deducted from a $164 exit. Saver retains $15 but loses most auctions, illustrating the cost of its low bid ceiling. D526 replaces a founder using the first market slot without comparing alternatives; the trace records no strategic founder search. Two companies finish. The combination of cheap second-price purchases and per-share payouts is powerful, but stronger bidding is the next discriminating experiment before adjusting payout numbers.",
+    "seed": 2002,
+    "scores": [
+      47,
+      117,
+      88,
+      144
+    ]
+  },
+  {
+    "game": 4,
+    "classification": "Bot limitation",
+    "review": "Seed 2003, two players: random wins 71\u201341 with zero finishers. Random repeatedly offers up to $8 against balanced\u2019s $1 bids and acquires shares for $1 (D14\u201336 and D56\u201390). Balanced later uses Focused Execution and Portfolio Conflict (D171, D178), but finishes with only $9 in share payouts and $32 cash. Random\u2019s public auction at D181\u2013183 is a questionable exception: it pays $4 for Obenay, which finally pays only $1 per share. The growth die and final position were uncertain, so this is not proof the purchase was irrational, but its uniform random bid has no valuation justification. Auction policy weakness is more evident than an engine defect.",
+    "seed": 2003,
+    "scores": [
+      71,
+      41
+    ]
+  },
+  {
+    "game": 5,
+    "classification": "Bot limitation",
+    "review": "Seed 2004, three players: growth wins 127, balanced 95, saver 81. Growth builds Obenay and Novidia, uses Paid Advice at D120 and Focused Execution at D133, and calls only $10 at D266. Saver shifts two spaces from Obenay to Gogol at D341 and buys more shares while the growth player has no money. Both Gogol and Obenay reach 24 in the final growth phase. D335 and later funding turns show the growth bot initiating opportunities despite being unable to bid; it could legally call capital, but its final-round restriction prevents that choice. All-company exit scoring and the preserved movement effects reconcile correctly; late liquidity policy needs improvement.",
+    "seed": 2004,
+    "scores": [
+      95,
+      127,
+      81
+    ]
+  },
+  {
+    "game": 6,
+    "classification": "Bot limitation / rule tradeoff",
+    "review": "Seed 2005, four players: growth wins 139 after repaying $40; saver scores 103, random 98, balanced 90. Growth uses capital at D227, D329, D349 and D409 to acquire a large portfolio. Weta reaches 24 at D460, yet later funding at D462, D486 and D492 remains legal. Those shares retain an $8 exit value even when their dice add no movement: this is the documented finished-company rule, not a lost-roll defect. Saver gains late shares after other players spend down. Random\u2019s final Fresh Perspectives at D499 consumes an action shortly before play ends, with little time to use the extra cards. Founder and card selection remain heuristic.",
+    "seed": 2005,
+    "scores": [
+      139,
+      103,
+      98,
+      90
+    ]
+  },
+  {
+    "game": 7,
+    "classification": "Bot limitation / pacing limitation",
+    "review": "Seed 2006, two players: random wins 63\u201333. Only two companies reach paying spaces, ending at Testra 12 and Obenay 18; the other four pay zero. Random finishes with $66 cash but owes $40, so calls contribute no free score. Its final capital call at D198 is largely idle liquidity; the following purchases spend only $3. Keeping that deal-flow card or funding another company was available, but random does not evaluate such alternatives. Saver\u2019s late Focused Execution and dividend (D178, D184) supply some value but do not compensate for its small portfolio. Two-player growth is substantially less dense than four-player growth; the fixed-round rule is reliable but does not produce a similar race.",
+    "seed": 2006,
+    "scores": [
+      33,
+      63
+    ]
+  },
+  {
+    "game": 8,
+    "classification": "Bot limitation",
+    "review": "Seed 2007, three players: random wins 136 against growth 72 and balanced 55, despite no finisher. Its $156 share payout outweighs $30 called capital. Early bids at D42\u201375 buy repeated Obenay stakes cheaply; in round three it also acquires Testra and Amazin. Final founder decisions D372\u2013376 add movement before the dice, including a value-card discard for Anya and a Gill move. Random\u2019s repeated founder changes are not selected for expected value, and both other policies underbid early future payouts. This game reinforces the aggregate warning: a strong random result is evidence to improve the opponents before treating payout or founder correlations as causal balance results.",
+    "seed": 2007,
+    "scores": [
+      136,
+      55,
+      72
+    ]
+  },
+  {
+    "game": 9,
+    "classification": "Rule behavior verified; bot limitation remains",
+    "review": "Seed 2008, four players: growth wins 146, saver 131, balanced 101, random 95. Growth calls $30, acquires several companies, and receives Jerry\u2019s purchase movement at D371\u2013375. Four companies finish by settlement, but play correctly continues through all four rounds. Saver takes many final shares for $2 after rivals exhaust their cash (D463\u2013517); growth\u2019s fixed final-round capital restriction again limits its participation. Several dice then have no positional gain because their companies already sit at 24, but their new shares still pay $8 each. This trace verifies that first arrivals, remaining dice and final all-company payouts are separate concepts.",
+    "seed": 2008,
+    "scores": [
+      101,
+      146,
+      131,
+      95
+    ]
+  },
+  {
+    "game": 10,
+    "classification": "Bot limitation",
+    "review": "Seed 2009, two players: growth wins 90\u201329 with no capital calls and no finishers. It buys multiple Amazin shares at $1\u2013$2 (D12, D35, D92, D100, D138, D146), then rolls that company to space 20 for $6 per share. Saver repeatedly initiates those opportunities while bidding below growth\u2019s ceiling and retains $8 cash. Its other companies mostly end at $1\u2013$2 per share. Paid Advice at D132 supplies $3 plus movement to the winning portfolio. No borrowing is needed in this matchup because the low bids keep shares inexpensive. This supports retaining the smaller payout curve while testing a more competitive early bidding model.",
+    "seed": 2009,
+    "scores": [
+      90,
+      29
+    ]
+  }
+]

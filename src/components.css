@@ -1,0 +1,124 @@
+/* One poker-card component. Contexts set its width; its typography and artwork scale together. */
+:is(.founder-card,.intel-card) {
+  container-type:inline-size; display:flex; flex-direction:column; flex:none;
+  width:var(--card-width,140px); height:auto; min-height:0; aspect-ratio:5/7;
+  box-sizing:border-box; padding:7px; margin:0; border:1px solid var(--company-ink,#191919);
+  border-radius:10px; background:#fff; color:var(--company-ink,#191919);
+  transform:none; overflow:visible; text-align:left; box-shadow:none;
+}
+.intel-card { background:#171717; color:#fff; border-color:#171717; }
+:is(.founder-face,.value-art) {
+  display:block; flex:none; width:100%; height:auto; min-height:0; aspect-ratio:1456/816;
+  margin:0; padding:0; object-fit:cover; border-radius:4px; overflow:hidden;
+}
+.founder-face img { display:block; width:100%; height:100%; object-fit:cover; }
+:is(.founder-monogram,.value-monogram) { display:grid; place-items:center; height:100%; font-size:28cqw; font-weight:800; background:#eee; color:#191919; }
+.founder-copy { display:block; padding:0; margin:0; }
+:is(.founder-copy small,.intel-card h3) { display:block; font-size:calc(8.2cqw + 1pt); font-weight:750; line-height:1.12; letter-spacing:0; margin:5px 0 3px; overflow-wrap:normal; }
+:is(.founder-copy p,.intel-card p) { display:block; font-size:calc(7.5cqw + 1pt); line-height:1.23; font-weight:400; margin:0; padding:0; overflow:visible; -webkit-line-clamp:unset; }
+:is(.founder-copy p,.intel-card p) strong { font-weight:750; }
+.reveal-timing { color:inherit; background:#ffe45e; padding:0 2px; border-radius:2px; }
+.game-layout { height:var(--table-height); }
+.game-layout .board { height:var(--table-height); min-height:0; padding:68px 110px; }
+.game-layout .centre { height:calc(var(--table-height) - 136px); min-height:0; }
+.game-layout .companies { height:100%; grid-template-rows:repeat(2,var(--mat-height)); }
+.game-layout .company {
+  --company-ink:color-mix(in srgb,var(--company) 35%,#101619);
+  color:var(--company-ink); border-color:var(--company-ink);
+  height:var(--mat-height); min-height:0; padding:10px; border-width:2px; border-radius:8px; box-shadow:0 2px 0 color-mix(in srgb,var(--company-ink) 30%,transparent);
+  grid-template-columns:var(--founder-width) minmax(0,1fr); grid-template-rows:34px minmax(0,1fr);
+}
+.game-layout .company>.founder-card { width:var(--founder-width); height:auto; min-height:0; padding:7px; }
+.game-layout .company>header { height:34px; min-height:0; }
+.game-layout .company>header h3 { color:var(--company-ink); font-size:19px; }
+.game-layout .company>.company-details { height:auto; min-height:0; }
+.game-layout .company .company-status { height:auto; min-height:0; }
+.game-layout .company .shareholders { height:auto; min-height:0; padding:6px 0; }
+.game-layout .company .share { border-color:var(--company-ink); color:var(--company-ink); }
+.game-layout .company .company-counts { margin:auto 0 0; }
+.game-layout .company .company-counts dd { color:var(--company-ink); }
+.game-layout .lead-token { border-color:var(--company-ink); }
+.game-layout :is(.intel-hand,.founder-market) { height:var(--table-height); }
+.game-layout :is(.intel-hand .intel-card,.founder-market .founder-card) { width:122px; height:auto; min-height:0; padding:6px; }
+.game-layout :is(.market-cards,.intel-hand>.intel-cards) { justify-content:center; }
+.game-layout .hand-card { padding:0; border:0; border-radius:9px; background:none; }
+.game-layout .hand-card.selected { outline:3px solid #f3bd2f; outline-offset:3px; }
+.hand-slot { display:block; }
+/* Fit an eight-column sheet without stretching either the cards or the row gaps. */
+dialog.paged-catalogue[open] { width:94vw; height:94dvh; padding:16px; gap:10px; background:#fff; }
+dialog.paged-catalogue .catalogue-page {
+  display:grid; flex:1; min-height:0; gap:10px;
+  grid-template-columns:repeat(8,var(--catalogue-card-width));
+  grid-template-rows:repeat(4,calc(var(--catalogue-card-width)*1.4));
+  justify-content:center; align-content:center;
+}
+dialog.paged-catalogue .catalogue-item { width:var(--catalogue-card-width); height:calc(var(--catalogue-card-width)*1.4); padding:0; background:none; border:0; box-shadow:none; }
+dialog.paged-catalogue .catalogue-item :is(.founder-card,.intel-card) { width:100%; height:100%; min-height:0; padding:4px; }
+dialog.catalogue-inspector :is(.founder-card,.intel-card) { width:320px; height:auto; min-height:0; margin:0 auto; padding:8px; }
+/* Drawer reaction portraits are intentional thumbnails; the full card remains inspectable. */
+.decision :is(.reaction-timeline,.power-prompt,.founder-options) .founder-copy p { display:none; }
+.game-layout { transform-origin:top center; }
+.game-layout .company>.company-details { align-self:stretch; justify-self:stretch; }
+.value-monogram { height:auto; aspect-ratio:1456/816; }
+.game-layout .company>header { flex-wrap:nowrap; align-items:flex-start; }
+.game-layout .company>header h3 { font-size:22px; white-space:nowrap; }
+.game-layout .lead-token { width:28px; height:28px; flex:none; font-size:22px; }
+.game-layout .lead-token.empty { border:0; background:color-mix(in srgb,var(--company-ink) 18%,transparent); color:var(--company-ink); }
+.lead-space { position:relative; }
+.game-layout .lead-space small { display:block; position:absolute; right:-4px; top:-8px; font-size:11px; line-height:1; }
+.game-layout .lead-space:has(.empty) small { display:none; }
+.game-layout :is(.intel-hand,.founder-market) h2 { font-size:15px; white-space:nowrap; }
+/* Resolution receipts repeat the action title above; use the card only as a thumbnail. */
+.decision .value-receipt { grid-template-columns:32px minmax(0,1fr); gap:12px; margin:0; width:100%; align-items:center; }
+.decision .value-receipt>.intel-card { width:32px; height:45px; padding:3px; overflow:hidden; }
+.decision .value-receipt>.intel-card :is(h3,p) { display:none; }
+.decision .value-receipt>.intel-card .value-art { width:100%; height:100%; margin:0; object-fit:cover; }
+.decision .value-receipt>div p { margin:3px 0; }
+.game-layout .company-counts>div { padding:4px; border-radius:6px; }
+.game-layout .company-counts dt { font-size:11px; }
+.game-layout .company-counts dd { font-size:18px; line-height:1.1; margin:0; }
+.game-layout .lead-token { display:flex; align-items:center; justify-content:center; padding:0; font-family:Arial,sans-serif; line-height:28px; }
+.game-layout .intel-hand { display:flex; flex-direction:column; gap:0; }
+.game-layout .intel-hand>.hand-pages { height:20px; min-height:20px; margin:0; flex:none; }
+.game-layout .intel-hand>.intel-cards { margin:0; gap:4px; justify-content:flex-start; }
+.game-layout .intel-hand .intel-card { width:120px; }
+.game-layout .founder-market { gap:0; }
+.game-layout :is(.board-column,.table-layout,.board-scroll) { height:var(--table-height); min-height:0; padding:0; margin:0; }
+
+/* The table owns spare viewport height; the drawer remains docked below it. */
+.game-layout .board { padding:82px 124px; }
+.game-layout .centre { height:calc(var(--table-height) - 164px); }
+.game-layout .companies { align-content:center; gap:16px; }
+.game-layout .track-label header>b { width:20px; height:20px; font-size:12px; }
+.game-layout .track-label .track-value { font-size:12px; }
+.game-layout .company-counts dt { font-size:10px; }
+.game-layout .company-counts dd { font-size:16px; }
+#app>.decision { margin-bottom:0; flex-shrink:0; }
+
+.game-layout .company>header h3 {font-size:18px}
+.game-layout .company-counts dd {font-size:13px}
+.game-layout .company-counts dt {font-size:9px}
+
+#app .decision .reid-options { display:flex; align-items:end; flex-wrap:wrap; }
+#app .decision .reid-options label { flex:1; min-width:0; }
+#app .decision .reid-options select { width:100%; max-width:100%; }
+#app .decision:has(.reid-options) .power-prompt { grid-template-columns:48px minmax(0,1fr); }
+#app .decision:has(.reid-options) .power-prompt>.founder-card { width:48px; height:67.2px; }
+
+/* Shared Lucide identity across investor mats and round share tokens. */
+.investor-icon { display:inline-block; width:18px; height:18px; flex:none; vertical-align:-3px; stroke:currentColor; }
+.share .investor-icon,.lead-token .investor-icon { width:20px; height:20px; vertical-align:middle; }
+.game-layout .lead-token:not(.empty) { border-radius:50%; background:#fff; }
+.game-layout .company .share { width:28px; height:28px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; padding:0; }
+
+/* Reserve enough room for bids and the fixed action footer. */
+#app { --drawer-height:240px; }
+@media(max-height:800px){ #app { --drawer-height:220px; } }
+#app .decision .auction-receipt .bids { grid-template-columns:repeat(4,minmax(0,1fr)); }
+#app .decision .auction-receipt .bids article { display:flex; flex-direction:column; gap:4px; min-height:64px; padding:7px; }
+#app .decision .auction-receipt .bids article>span { display:flex; align-items:center; flex-wrap:wrap; gap:4px; }
+.game-layout .lead-space { padding:0; background:none; gap:0; }
+.game-layout .lead-token { box-sizing:border-box; padding:4px; }
+.game-layout .lead-token .investor-icon { width:100%; height:100%; }
+
+.game-layout .lead-token.empty { border:1.5px dashed var(--company-ink); background:transparent; }

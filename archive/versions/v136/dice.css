@@ -1,0 +1,55 @@
+/* Dice-specific additions; the table, typography, cards and drawer use classic styles. */
+.dice-app .deal-hand{display:flex;gap:6px;align-items:center;justify-content:center;flex:0 0 36px;min-height:36px}
+.dice-app .deal-card{border-top:4px solid var(--company);padding:3px 9px;font-size:11px}
+.dice-app .deal-card.selected{outline:2px solid #111;outline-offset:1px}
+.dice-app .dice-decision{height:220px;flex:0 0 220px}
+.dice-app .decision-content>h2{margin:2px 0;font-size:18px}
+.dice-app .decision-content>p{margin:5px 0;font-size:12px}
+.dice-app .decision-content select{max-width:100%}
+.dice-app .dice-holding{display:flex;align-items:center;gap:2px;font-size:13px}
+.dice-app .company .shareholders{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.dice-app .die-face{display:inline-grid;place-items:center;width:30px;height:30px;border:2px solid #111;border-radius:6px;background:white}
+.dice-app .score-grid{display:flex;gap:12px}.dice-app .score-grid article{flex:1;display:grid;gap:4px}.dice-app .score-grid strong{font-size:24px}.dice-app .score-grid small{font-size:11px}
+.dice-dialog .catalogue{display:flex;justify-content:center;gap:24px;padding:20px 0;min-height:300px}.dice-dialog .catalogue>.founder-card,.dice-dialog .catalogue>.intel-card{--card-width:180px;width:180px;flex:none}
+.dice-dialog nav,.dice-dialog footer{display:flex;justify-content:space-between;gap:8px}.dice-dialog .catalogue>article:only-child:not(.founder-card):not(.intel-card){max-width:650px}
+.dice-inspector{display:flex;justify-content:center;padding:20px}.dice-inspector>article{--card-width:280px;width:280px}
+.dice-dialog form{display:flex;flex-wrap:wrap;gap:16px;align-items:end}.dice-dialog form label{display:grid;gap:6px}.dice-dialog input{max-width:160px}
+.dice-app [hidden]{display:none}
+.dice-app .dice-decision{height:180px;flex:0 0 180px}.dice-app .deal-hand{flex-basis:28px;min-height:28px}.dice-app .deal-card{padding:2px 7px;font-size:10px}
+.dice-app .dice-decision{min-height:180px;max-height:180px}
+.live-dice-app .dice-picks {display:flex;gap:12px;justify-content:center;}
+.live-dice-app .dice-picks label {display:flex;align-items:center;gap:6px;font-size:12px;}
+.live-dice-app .dice-picks select {max-width:230px;font-size:12px;}
+.live-dice-app .deal-hand .deal-card {flex:0 1 100px;min-width:0;}
+.live-dice-app .hand-pages {min-height:30px;}
+.live-dice-app #app .dice-decision{height:200px;flex-basis:200px;min-height:200px;max-height:200px}
+.live-dice-app #app .decision .decision-content>h2{font-size:16px;line-height:22px;margin:0 0 3px}
+.live-dice-app #app .decision .decision-content>p{line-height:15px;margin:3px 0}
+.live-dice-app #app .decision .decision-content{scrollbar-gutter:auto}
+.live-dice-app .die-face{width:24px;height:24px}
+.live-dice-app .dice-picks select{padding:4px}
+.live-dice-app #app .deal-hand{flex-basis:36px;min-height:36px;gap:4px}
+.live-dice-app #app .deal-hand button{min-height:28px;line-height:14px;padding:3px 5px;font-size:10px;white-space:nowrap}
+.live-dice-app #app .decision .decision-actions:empty{min-height:0;height:0;padding:0;border:0}
+.live-dice-app .score-grid{gap:8px}
+.live-dice-app .score-grid b{font-size:12px;line-height:15px}
+@media(max-width:1100px){
+ .live-dice-app #app>.top{height:76px;min-height:76px;display:grid;grid-template-columns:260px 1fr;grid-template-rows:30px 38px;gap:4px}
+ .live-dice-app #app>.top .status{justify-self:end;white-space:nowrap}
+ .live-dice-app #app>.top nav{grid-column:1 / -1;justify-content:flex-end}
+ .live-dice-app #app>.top nav button{white-space:nowrap;padding:6px 10px}
+}
+/* v136: all public options and the complete grouped hand remain visible. */
+.mild-dice-app #app .game-layout{grid-template-columns:270px minmax(0,1fr) 270px;gap:12px}
+.mild-dice-app #app .game-layout :is(.market-cards,.intel-hand>.intel-cards){display:grid;grid-template-columns:repeat(2,130px);align-content:start;gap:10px}
+.mild-dice-app #app .game-layout :is(.intel-hand,.founder-market){width:270px}
+.mild-dice-app #app .dice-decision{display:grid;grid-template-columns:250px minmax(0,1fr);grid-template-rows:1fr auto;column-gap:20px;padding:12px 16px}
+.mild-dice-app #app .deal-hand{grid-column:1;grid-row:1/span 2;display:block;align-self:stretch;border-right:1px solid #bcb5a5;padding-right:16px}
+.mild-dice-app #app .deal-hand h3{font-size:14px;margin:0 0 10px}
+.mild-dice-app #app .deal-groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.mild-dice-app #app .deal-hand button{font-size:12px;white-space:normal;min-height:38px;opacity:1}
+.mild-dice-app #app .deal-hand button:disabled{color:#514d40}
+.mild-dice-app #app .decision-content{grid-column:2;grid-row:1;min-height:0}
+.mild-dice-app #app .decision-actions{grid-column:2;grid-row:2}
+.mild-dice-app #app .dice-decision{height:170px;min-height:170px;max-height:170px;flex-basis:170px}
+.mild-dice-app #app .deal-hand button{min-height:32px}

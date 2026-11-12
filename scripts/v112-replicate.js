@@ -1,0 +1,5 @@
+import fs from'node:fs';import path from'node:path';import{parallel}from'./parallel.js';
+const out=path.resolve('docs/v112-release'),jobs=[];
+for(let i=0;i<60;i++)for(let seat=0;seat<2;seat++)jobs.push({id:`replicate-2-${i}-${seat}`,variant:'replication',players:2,seed:119100+i,samples:24,source:out+'/source-fixed',botSource:out+'/baseline',baselineSeats:[1-seat],newSeat:seat,out,health:true});
+fs.writeFileSync(out+'/replication-protocol.json',JSON.stringify({reason:'Corrected independent replication: the earlier range accidentally duplicated main 2-player seeds and is retained separately, excluded from inference. New range 119100–119159 is disjoint from all previous cohorts. Planned after main test finished at 74.5/120 wins; run all 120 games regardless of result. Use the narrowly corrected Paid Advice mapping; no scoring parameter changes.',jobs},null,2));
+await parallel(jobs,{moduleURL:new URL('./health-game.js',import.meta.url),workers:4,onResult:r=>{fs.appendFileSync(out+'/replication.jsonl',JSON.stringify(r)+'\n');console.log(r.id,r.status);}});

@@ -1,8 +1,11 @@
-import {drawFounderValue} from './engine.js';
+import {rollDie} from './live-dice-rules.js';
+import {exitPrice as liveExitPrice,trackExitPrice} from './live-dice-rules.js';
+import {shuffle,cardCash,random,resolveCardBase} from './engine.js';
 import {blockedDestination,recordArrivals} from './movement.js';
 import {shareCount,shareLeader} from './ownership.js';
 import { companyValue, slotCards, companyOrder } from './config.js';
 import {clone as copy} from './clone.js';
+const duringRevealRound=g=>g.valueDieActive||g.roundDice||duringReveal(g)||['start','end'].includes(g.race?.stage);
 export const duringReveal=g=>!!g.race&&!g.race.stage&&g.race.card.kind==='growth';
 const held = shareCount;
 const controller = (g,cid) => g.forecast?(g.forecastOwners[cid]??=shareLeader(g.companies[cid])):shareLeader(g.companies[cid]);
@@ -22,9 +25,24 @@ function offer(g,company,text,options,player=controller(g,company),mandatory=fal
     beforeReveal:!g.race.revealed,mandatory,options:mandatory?options:[option('Pass'),...options]};
 }
 export function markIPO(g,company) {
- if(g.companies[company].position>=g.rules.checkpoints.at(-1))g.ipoTrigger??=company;
+ if(g.companies[company].position>=g.rules.checkpoints.at(-1)){
+  g.ipoTrigger??=company;
+  if(g.variant==='dice'&&!g.finishOrder.includes(company)){g.finishOrder.push(company);g.companies[company].finishOrder=g.finishOrder.length;}
+ }
 }
+const reidOffers=g=>order(g).filter(id=>g.companies[id].founder===21).map(company=>({kind:'reidOffer',company}));
 function reactions(g,moves) {
+  // A travelling companion arrives with the mover before landing powers check occupancy.
+  const follower=g.companies.find(c=>c.founder===24&&!c.down&&!c.hiringFumble&&!moves.some(m=>m.company===c.id));
+  const companion=follower&&moves.find(m=>m.company!==follower.id&&m.before===follower.position&&m.after!==m.before);
+  if(companion){
+    const before=follower.position;follower.position=g.daniloStep?Math.min(24,before+1):companion.after;
+    const followed={company:follower.id,before,after:follower.position,source:follower.id};
+    moves=[...moves,followed];recordArrivals(g,[followed]);markIPO(g,follower.id);
+    g.metrics.founderBonus=(g.metrics.founderBonus??0)+follower.position-before;
+    recordFounderMovement(g,24,follower.position-before);
+    note(g,follower.id,`${follower.id}: ${before} → ${follower.position}`,follower.id,{kind:'move',from:before,to:follower.position});
+  }
   for(const m of moves) {
     const distance=Math.max(0,m.after-m.before);
     g.race.advanced[m.company]+=distance;
@@ -33,15 +51,17 @@ function reactions(g,moves) {
   }
   const steps=[];
   for(const cid of order(g)) {
-    if(g.race.used.includes(cid)&&g.companies[cid].founder!==12)continue;
-    const c=g.companies[cid]; if(c.hiringFumble||c.down||![0,10,12].includes(c.founder))continue; const other=moves.filter(m=>m.company!==cid), own=moves.find(m=>m.company===cid);
+    if(g.race.used.includes(cid)&&![0,22,23,24,25].includes(g.companies[cid].founder))continue;
+    const c=g.companies[cid]; if(c.hiringFumble||c.down||![0,10,22,23,24,25].includes(c.founder))continue; const other=moves.filter(m=>m.company!==cid), own=moves.find(m=>m.company===cid);
     const landed=other.find(m=>m.after!==m.before&&m.after===c.position);
     let trigger=null;
     switch(c.founder) {
-      case 0: if(landed)trigger={power:'jobs'};break;
+      case 0: if(landed&&duringRevealRound(g)&&!g.stefanUsed?.includes(cid))trigger={power:'jobs'};break;
 
       case 10: for(const m of other.filter(m=>m.before<=c.position&&m.after>c.position))steps.push({kind:'trigger',company:cid,power:'banana',target:m.company});break;
-      case 12: if(own&&own.after!==own.before&&g.companies.some(x=>x.id!==cid&&x.position===own.after))trigger={power:'follow'};break;
+      case 22: if(own&&own.after!==own.before&&g.companies.some(x=>x.id!==cid&&x.position===own.after)){const player=controller(g,cid);if(player!==null)steps.push({kind:'landingCash',company:cid,player});}break;
+      case 23: if(own&&own.after!==own.before){const ahead=g.companies.filter(x=>x.id!==cid&&x.position===c.position+1);if(ahead.length===1)trigger={power:'swapAhead',target:ahead[0].id};}break;
+      case 25: if(own&&!own.noEmptyBonus&&own.after!==own.before&&c.position<Math.max(...g.companies.map(x=>x.position))&&!g.companies.some(x=>x.id!==cid&&x.position===own.after))trigger={power:'empty'};break;
     }
     if(trigger)steps.push({kind:'trigger',company:cid,...trigger});
   }
@@ -56,9 +76,9 @@ function applyMoves(g,actions) {
   const cp=g.rules.checkpoints.at(-1),moves=[];
   for(const a of actions) {
     const c=g.companies[a.company],before=c.position;
-    const destination=blockedDestination(g.companies,c.id,before,Math.max(0,Math.min(cp,a.destination ?? (before+a.amount))));
+    const destination=blockedDestination(g.companies,c.id,before,Math.max(0,Math.min(cp,a.destination ?? (before+a.amount))),a.destination!==undefined,cp);
     c.position=destination;
-    moves.push({company:c.id,before,after:c.position,source:a.source});
+    moves.push({company:c.id,before,after:c.position,source:a.source,noEmptyBonus:a.noEmptyBonus});
     if(!g.forecast&&a.intel&&before!==c.position)g.race.log.push({company:c.id,founder:-1,text:`${c.id}: ${before} → ${c.position}`,intel:true,intelPlayer:g.race.intelContext?.player,intelKind:g.race.intelContext?.kind});
     if(!g.forecast&&a.catchUp&&before!==c.position)g.race.log.push({company:c.id,founder:-1,text:`${c.id}: ${before} → ${c.position}`,catchUp:true});
     if(a.source!==undefined) {
@@ -74,41 +94,72 @@ function applyMoves(g,actions) {
 function trigger(g,a) {
   const r=g.race,c=g.companies[a.company];
   if(c.down||c.hiringFumble)return;
-  if(a.power!=='follow'){if(r.used.includes(c.id))return;r.used.push(c.id);}
+  if(!['jobs','empty','swapAhead'].includes(a.power)){if(r.used.includes(c.id))return;r.used.push(c.id);}
   switch(a.power) {
-    case 'jobs': push(g,move(c.id,2,c.id));break;
+    case 'jobs': if(!duringRevealRound(g)||(g.stefanUsed??=[]).includes(c.id))break;g.stefanUsed.push(c.id);push(g,move(c.id,2,c.id));break;
     case 'banana': push(g,down(a.target,c.id),move(c.id,1,c.id));break;
-    case 'follow': push(g,move(c.id,1,c.id));break;
+    case 'swapAhead': {const target=g.companies[a.target];push(g,{kind:'batch',moves:[{kind:'move',company:c.id,destination:target.position,source:c.id},{kind:'move',company:target.id,destination:c.position,source:c.id}]});break;}
+    case 'empty': push(g,{...move(c.id,1,c.id),noEmptyBonus:true});break;
   }
 }
 function step(g,a,base) {
   const r=g.race,c=g.companies[a.company ?? r.card.company];
   switch(a.kind) {
+    case 'founderDie': {
+      const die=rollDie(()=>random(g),a.dieKind),saved={card:r.card,event:r.event,revealed:r.revealed,effectCompany:r.effectCompany,bonus:r.bonus,valueDieActive:g.valueDieActive};
+      g.metrics.rolls++;g.metrics.baseMovement+=die.printed;
+      g.log.push({type:'die',round:g.round,company:c.id,source:'founder',founder:c.founder,...die});note(g,c.id,`Rolled ${die.kind}: ${die.fumble?'×':die.printed}.`,c.id,{die});
+      r.card={id:`founder-die-${g.metrics.rolls}`,kind:'growth',company:c.id,printed:die.printed,...(die.fumble?{effect:'fumble'}:{})};r.bonus=0;g.valueDieActive=true;
+      push(g,...order(g).filter(id=>g.companies[id].founder===16).map(company=>({kind:'julieOffer',company})),{kind:'founderDieBase',company:c.id},{kind:'founderDieEnd',company:c.id,saved});break;
+    }
+    case 'founderDieBase': step(g,{kind:'base',company:c.id},resolveCardBase);break;
+    case 'founderDieEnd': {const {valueDieActive,...saved}=a.saved;Object.assign(r,saved);g.valueDieActive=valueDieActive;break;}
+    case 'valueDie': {
+      const die=rollDie(()=>random(g),a.dieKind);g.metrics.rolls++;g.metrics.baseMovement+=die.printed;
+      (g.valueResult.dice??=[]).push({...die,company:c.id});g.log.push({type:'die',round:g.round,company:c.id,source:g.valueResult.kind,player:a.player,...die});
+      r.card={id:`value-die-${g.metrics.rolls}`,kind:'growth',company:c.id,printed:die.printed,...(die.fumble?{effect:'fumble'}:{})};g.valueDieActive=true;
+      push(g,...(g.diceRevision>=147?order(g).filter(id=>g.companies[id].founder===16).map(company=>({kind:'julieOffer',company})):[]),{kind:'valueDieBase',company:c.id},{kind:'valueDieEnd',company:c.id});break;
+    }
+    case 'valueDieBase': step(g,{kind:'base',company:c.id},resolveCardBase);break;
+    case 'valueDieEnd': r.card={kind:'phase'};r.event={type:'founderPhase',stage:'intel'};g.valueDieActive=false;break;
+    case 'landingCash': {
+      if(g.forecast){g.players[a.player].cash+=2;(g.forecastSpending??=g.players.map(()=>0))[a.player]-=2;}
+      else cardCash(g,a.player,2,{founder:22,company:c.id});
+      g.metrics.mackRewards=(g.metrics.mackRewards??0)+1;
+      note(g,c.id,`My lead investor gained $2.`,c.id,{player:a.player,amount:2});break;
+    }
     case 'phaseStart': {
       if(c.hiringFumble||c.down)break;
+      if(c.founder===21)push(g,{kind:'reidOffer',company:c.id});
+      if(c.founder===26&&!r.used.includes(c.id)){
+        r.used.push(c.id);const id=controller(g,c.id),hand=g.players[id]?.intel??[];
+        if(hand.length)offer(g,c.id,'Discard 1 value card to move 2 spaces?',hand.map(card=>option(`Discard ${card.kind}`,{kind:'discardValue',company:c.id,player:id,card:card.id},move(c.id,2,c.id))));
+      }
       if(c.founder===13&&!r.used.includes(c.id)){
         r.used.push(c.id);push(g,move(c.id,1,c.id));
       }
       if(c.founder===14&&!r.used.includes(c.id)){
-        r.used.push(c.id);push(g,{kind:'addSupply',company:c.id,count:1});
+        r.used.push(c.id);push(g,g.diceRevision>=147?{kind:'founderDie',company:c.id,dieKind:'mild'}:{kind:'addSupply',company:c.id,count:1});
+      }
+      if(c.founder===3&&!r.used.includes(c.id)){
+        r.used.push(c.id);
+        offer(g,c.id,'Move one company 1 space?',order(g).map(id=>option(`Move company ${id}`,move(id,1,c.id))));
       }
       if(c.founder===1&&ahead(g,c.id).length)push(g,{kind:'accelerate',company:c.id});
       if(c.founder===6&&!r.used.includes(c.id)&&c.position<Math.max(...g.companies.map(x=>x.position))){
         const leaders=order(g).filter(id=>g.companies[id].position===Math.max(...g.companies.map(x=>x.position)));
-        r.used.push(c.id);push(g,move(c.id,1,c.id),...leaders.map(id=>down(id,c.id)));
+        r.used.push(c.id);
+        if(leaders.length===1||controller(g,c.id)===null)push(g,move(c.id,1,c.id),down(leaders[0],c.id));
+        else offer(g,c.id,'Move 1 space and fumble one current leader.',leaders.map(id=>option(`Fumble company ${id}`,move(c.id,1,c.id),down(id,c.id))),controller(g,c.id),true);
       }
-      if([15,18,19].includes(c.founder)&&!r.used.includes(c.id)){
+      if([15,19].includes(c.founder)&&!r.used.includes(c.id)){
         r.used.push(c.id);
         if(c.founder===15){
-          const targets=order(g).filter(id=>id!==c.id&&g.companies[id].position!==c.position&&Math.abs(g.companies[id].position-c.position)<=3);
+          const targets=order(g).filter(id=>id!==c.id&&g.companies[id].position!==c.position&&Math.abs(g.companies[id].position-c.position)<=2);
           if(targets.length)offer(g,c.id,'Pull a nearby company to my space and fumble it?',targets.map(id=>option(`Pull company ${id}`,{kind:'move',company:id,destination:c.position,source:c.id},down(id,c.id))));
         }
-        if(c.founder===18&&c.reserve>0){
-          const targets=order(g).filter(id=>id!==c.id&&g.companies[id].reserve<3);
-          if(targets.length)offer(g,c.id,'Transfer 1 treasury slot and move 3?',targets.map(id=>option(`Transfer to company ${id}`,{kind:'transfer',company:c.id,target:id},move(c.id,3,c.id))));
-        }
         if(c.founder===19){
-          const positions=g.companies.filter(x=>x.id!==c.id&&x.position>c.position).map(x=>x.position);
+          const positions=g.companies.filter(x=>x.id!==c.id&&x.position>c.position&&x.position-c.position<=2).map(x=>x.position);
           if(positions.length){
             const destination=Math.min(...positions),targets=g.companies.filter(x=>x.id!==c.id&&x.position===destination).map(x=>x.id);
             offer(g,c.id,'Join the next company ahead and fumble all companies there, including me?', [option('Join and fumble',{kind:'move',company:c.id,destination,source:c.id},down(c.id,c.id),...targets.map(id=>down(id,c.id)))]);
@@ -116,14 +167,14 @@ function step(g,a,base) {
         }
       }
       if(c.founder===2&&!r.used.includes(c.id)){
-        const targets=order(g).filter(id=>id!==c.id&&Math.abs(g.companies[id].position-c.position)>0&&Math.abs(g.companies[id].position-c.position)<=3);
+        const targets=order(g).filter(id=>id!==c.id&&Math.abs(g.companies[id].position-c.position)>0&&Math.abs(g.companies[id].position-c.position)<=2);
         r.used.push(c.id);
-        if(targets.length)offer(g,c.id,'Swap spaces with a company within 3 spaces?',targets.map(id=>option(`Swap with company ${id}`,{kind:'batch',moves:[{kind:'move',company:c.id,destination:g.companies[id].position,source:c.id},{kind:'move',company:id,destination:c.position,source:c.id}]})));
+        if(targets.length)offer(g,c.id,'Swap spaces with a company within 2 spaces?',targets.map(id=>option(`Swap with company ${id}`,{kind:'batch',moves:[{kind:'move',company:c.id,destination:g.companies[id].position,source:c.id},{kind:'move',company:id,destination:c.position,source:c.id}]})));
       }
       break;
     }
     case 'shareholderOffer':
-      if(c.founder===17&&!c.down&&!c.hiringFumble&&(a.qualified||held(c,a.player)>0))push(g,move(c.id,2,c.id));
+      if(c.founder===17&&!c.down&&!c.hiringFumble&&(a.qualified||held(c,a.player)>0))push(g,move(c.id,1,c.id));
       break;
     case 'catchUp': {
       if(!g.rules.catchUp)break;
@@ -134,47 +185,61 @@ function step(g,a,base) {
     }
     case 'phaseEnd': {
       if(c.hiringFumble||c.down)break;
-      if(c.founder===3&&!r.used.includes(c.id)){
-        const targets=order(g).filter(id=>id!==c.id);r.used.push(c.id);
-        if(targets.length)offer(g,c.id,'Move another company 1 space, then move 1 yourself?',targets.map(id=>option(`Help company ${id}`,move(id,1,c.id),move(c.id,1,c.id))));
-      }
+      if(c.founder===21)push(g,{kind:'reidOffer',company:c.id});
+
 
       break;
     }
     case 'recoverDraw': {
-      const before=c.position,hiring=c.hiringFumble;c.down=false;c.hiringFumble=false;r.revealed=true;
-      r.event={type:'deferred',card:r.card.original,deferred:true,effect:{before,after:before}};
+      const before=c.position,recovered=c.down||c.hiringFumble;c.down=false;c.hiringFumble=false;r.revealed=true;
+      if(recovered&&c.founder===20)push(g,move(c.id,2,c.id));
+      r.event={type:'deferred',card:r.card.original,deferred:true,effect:{before,after:before}};push(g,...reidOffers(g));
       break;
     }
     case 'julieOffer': {
-      if(c.founder!==16||c.down||c.hiringFumble||(g.julieUsed??[]).includes(c.id)||r.card.kind!=='growth'||r.card.company===c.id||controller(g,c.id)===null)break;
+      const owner=controller(g,c.id);
+      if(c.founder!==16||owner===null||(g.players[owner]?.cash??0)<2||c.down||c.hiringFumble||(g.julieUsed??[]).includes(c.id)||r.card.kind!=='growth'||r.card.company===c.id||controller(g,c.id)===null)break;
       const target=g.companies[r.card.company];
       r.event={type:'reveal',card:g.forecast?r.card:copy(r.card),positions:[...r.startPositions],pending:true,effect:{before:target.position,after:target.position}};
-      offer(g,c.id,'Use this card’s printed effect and power for my company? It still belongs to its original company.',[option('Use for my company',{kind:'adoptGrowth',company:c.id})]);
+      offer(g,c.id,'Pay $2 to use this token for my company?',[option('Pay $2 and use token',{kind:'payFounder',company:c.id,player:owner,amount:2},{kind:'adoptGrowth',company:c.id})]);
       break;
+    }
+    case 'payFounder': {
+      const p=g.players[a.player];if(p.cash<a.amount)throw Error('Cannot afford this founder power.');
+      p.cash-=a.amount;
+      if(g.forecast)(g.forecastSpending??=g.players.map(()=>0))[a.player]+=a.amount;
+      else {g.bank.burn+=a.amount;g.log.push({type:'cardCash',player:a.player,amount:-a.amount,founder:c.founder,leg:g.leg,cycle:g.cycle});}
+      note(g,c.id,`Paid $${a.amount} to use my founder power.`);break;
     }
     case 'adoptGrowth': {
       (g.julieUsed??=[]).push(c.id);r.effectCompany=c.id;
-      const next=r.queue.find(a=>a.kind==='base');if(next)next.company=c.id;
+      const next=r.queue.find(a=>['base','valueDieBase','founderDieBase'].includes(a.kind));if(next)next.company=c.id;
       if(g.pendingRedraw){g.pendingRedraw=false;g.drawsLeft=Math.max(0,g.drawsLeft-1);}
       note(g,c.id,`Used company ${r.card.company}'s printed effect and power for my company.`);
       break;
     }
     case 'reidOffer': {
-      const physical=r.card;
-      if(c.founder!==21||c.down||c.hiringFumble||!g.removed.some(card=>card.id===physical.id&&!card.burned))break;
-      const targets=order(g).filter(id=>id!==c.id);
-      if(targets.length)offer(g,c.id,'Return my card to the bottom of my supply and move another company back 1?',targets.map(id=>option(`Return card; move company ${id} back 1`,{kind:'returnResolved',company:c.id,card:physical.id},move(id,-1,c.id))));
+      if(c.founder!==21||c.down||c.hiringFumble||!duringRevealRound(g)||(g.reidUsed??=[]).includes(c.id))break;
+      if(g.diceRevision>=147){const cards=[...new Map(g.dealSpent.map(card=>[card.company,card])).values()];if(cards.length)offer(g,c.id,'Return a spent deal-flow card to the top and move its company back 2?',cards.map(card=>option(`Return company ${card.company}; move it back 2`,{kind:'returnDealFlow',company:card.company,source:c.id,card:card.id},move(card.company,-2,c.id))));break;}
+      const cards=[...new Map(g.removed.filter(card=>!card.burned).map(card=>[`${card.company}:${card.printed}:${card.effect??''}:${card.signature??''}`,card])).values()];
+      if(cards.length)offer(g,c.id,'Put a discarded token on top of its supply and move that company back 2?',cards.map(card=>option(`Return company ${card.company} token ${card.effect==='fumble'?'Fumble':'+'+card.printed}; move it back 2`,{kind:'returnDiscard',company:card.company,source:c.id,card:card.id},move(card.company,-2,c.id))));
       break;
     }
-    case 'returnResolved': {
-      const index=g.removed.findIndex(card=>card.id===a.card&&!card.burned);if(index<0)break;
+    case 'returnDealFlow': {
+      const index=g.dealSpent.findIndex(card=>card.id===a.card);if(index<0)throw Error('Spent deal-flow card unavailable.');
+      const [card]=g.dealSpent.splice(index,1);delete card.bonusDice;g.dealDeck.push(card);(g.reidUsed??=[]).push(a.source);note(g,a.source,`Returned company ${c.id}'s deal-flow card to the top.`,c.id);break;
+    }
+    case 'returnDiscard': {
+      const index=g.removed.findIndex(card=>card.id===a.card&&card.company===c.id&&!card.burned);if(index<0)break;
       const {revealed,discarded,burned,paid,...card}=g.removed.splice(index,1)[0];
-      c.history=c.history.filter(x=>x.id!==card.id);c.supply.push({...card,paid:false,fundingCount:card.fundingCount??Number(!!paid)});
-      note(g,c.id,'Returned my growth card to the bottom of my supply.');break;
+      c.history=c.history.filter(x=>x.id!==card.id);c.supply.unshift({...card,paid:false,fundingCount:card.fundingCount??Number(!!paid)});
+      c.discardCount=g.removed.filter(card=>card.company===c.id&&!card.burned).length;
+      (g.reidUsed??=[]).push(a.source);
+      note(g,a.source,`Returned company ${c.id}'s token to the top of its supply.`,c.id);break;
     }
     case 'base': {
-      if(c.down&&r.card.signature!=='recover'){r.revealed=true;r.event=base(g,{kind:'deferred',company:c.id,original:r.card});push(g,{kind:'reidOffer',company:r.card.company});break;}
+      if(c.down&&r.card.signature!=='recover'&&!r.card.diceFumble){r.revealed=true;if(c.founder===20)push(g,move(c.id,2,c.id));r.event=base(g,{kind:'deferred',company:c.id,original:r.card});push(g,...reidOffers(g));break;}
+      const recovered=c.down&&r.card.signature==='recover';
       const regular=r.card.kind==='growth'&&!r.card.effect;
 
       r.skipped=regular&&!!c.down&&r.card.signature!=="recover";
@@ -186,7 +251,7 @@ function step(g,a,base) {
       const movements=r.event.moves??[{company:c.id,before:r.event.effect.before,after:r.event.effect.after}];
       if(regular&&r.bonus>0&&!r.skipped)movements.forEach(m=>m.source=c.id);
       // Finish movement reactions before the revealing founder's after-card opportunity.
-      push(g,{kind:'after',company:c.id},{kind:'reidOffer',company:r.card.company});
+      push(g,...(recovered&&c.founder===20?[move(c.id,2,c.id)]:[]),{kind:'after',company:c.id},...reidOffers(g));
       reactions(g,movements,r.event.positions);
       if(r.card.effect==='fumble')push(g,down(c.id));
       break;
@@ -216,7 +281,7 @@ function step(g,a,base) {
     case 'batch': applyMoves(g,a.moves);break;
     case 'trigger': trigger(g,a);break;
     case 'fumble': {
-      if(c.founder===11&&!c.down&&!c.hiringFumble&&duringReveal(g)){g.metrics.fumbleConversions=(g.metrics.fumbleConversions??0)+1;note(g,c.id,'Instead of fumbling, I move 2.');push(g,move(c.id,2,c.id));break;}
+      if(c.founder===11&&!c.down&&!c.hiringFumble&&duringRevealRound(g)&&!(g.danUsed??=[]).includes(c.id)){g.danUsed.push(c.id);g.metrics.fumbleConversions=(g.metrics.fumbleConversions??0)+1;note(g,c.id,`Instead of fumbling, I move ${(g.roundDice||g.diceRevision>=145)?1:2}.`);push(g,move(c.id,(g.roundDice||g.diceRevision>=145)?1:2,c.id));break;}
       if(c.down)break;
       c.down=true;
       g.metrics.founderFumbles=(g.metrics.founderFumbles??0)+1;
@@ -226,38 +291,38 @@ function step(g,a,base) {
       for(const id of order(g)){
         const other=g.companies[id];if(other.down||other.hiringFumble)continue;
         if(other.founder===5)responses.push(move(id,1,id));
-        if(id!==c.id&&other.founder===9&&duringReveal(g))responses.push({kind:'repairOffer',company:id,target:c.id});
+        if(id!==c.id&&other.founder===9&&duringRevealRound(g))responses.push({kind:'repairOffer',company:id,target:c.id});
       }
       push(g,...responses);
       break;
     }
     case 'crisisOffer': break; // Intel is played only on the investor’s turn.
     case 'repairOffer':
-      if(!duringReveal(g)||!g.companies[a.target].down||c.down||c.hiringFumble||(g.harryUsed??=[]).includes(c.id))break;
-      offer(g,c.id,`Recover company ${a.target} and deploy 2 cards?`,[
-        option('Help it recover',{kind:'repair',company:a.target,source:c.id},{kind:'addSupply',company:c.id,count:2})]);break;
-    case 'transfer': {
-      const target=g.companies[a.target];
-      if(c.down||c.hiringFumble||c.reserve<1||target.reserve>=3)break;
-      c.reserve--;target.reserve++;note(g,c.id,`Transferred 1 treasury slot to company ${target.id}.`);break;
+      if(!duringRevealRound(g)||!g.companies[a.target].down||c.down||c.hiringFumble||(g.harryUsed??=[]).includes(c.id))break;
+      offer(g,c.id,g.diceRevision>=147?`Recover company ${a.target} and roll one bland die?`:`Recover company ${a.target} and deploy 2 tokens?`,[
+        option('Help it recover',{kind:'repair',company:a.target,source:c.id},g.diceRevision>=147?{kind:'founderDie',company:c.id,dieKind:'bland'}:{kind:'addSupply',company:c.id,count:2})]);break;
+    case 'discardValue': {
+      const hand=g.players[a.player].intel,index=hand.findIndex(card=>card.id===a.card);
+      if(index<0)throw Error('Founder discard unavailable.');
+      const card=hand.splice(index,1)[0];(g.intelDiscard??=[]).push(card);note(g,c.id,`Discarded ${card.kind}; no replacement.`,c.id,{discard:card.kind});break;
     }
     case 'addSupply': {
       const cards=c.supply.splice(0,a.count??1);
-      if(cards.length){g.pile.push(...cards);g.metrics.entered+=cards.length;if(a.intel)r.log.push({company:c.id,founder:-1,intel:true,intelPlayer:r.intelContext?.player,intelKind:r.intelContext?.kind,text:`Deployed ${cards.length} ${cards.length===1?'card':'cards'}.`});else note(g,a.source??c.id,`Company ${c.id} deployed ${cards.length} ${cards.length===1?'card':'cards'}.`);}
+      if(cards.length){g.pile.push(...cards);if(!g.forecast)shuffle(g,g.pile);g.metrics.entered+=cards.length;if(a.intel)r.log.push({company:c.id,founder:-1,intel:true,intelPlayer:r.intelContext?.player,intelKind:r.intelContext?.kind,text:`Deployed ${cards.length} ${cards.length===1?'token':'tokens'}.`});else note(g,a.source??c.id,`Company ${c.id} deployed ${cards.length} ${cards.length===1?'token':'tokens'}.`);}
       break;
     }
     case 'returnSupply': {
       const cards=returnDiscarded(g,c.id,a.count??1);
       if(!cards.length)break;
-      if(a.intel)r.log.push({company:c.id,founder:-1,intel:true,intelKind:r.intelContext?.kind,intelPlayer:r.intelContext?.player,text:`Returned ${cards.length} discarded cards to supply.`});
-      else note(g,a.source,`Returned ${cards.length} discarded card${cards.length===1?'':'s'} to company ${c.id}'s supply.`,c.id);
+      if(a.intel)r.log.push({company:c.id,founder:-1,intel:true,intelKind:r.intelContext?.kind,intelPlayer:r.intelContext?.player,text:`Returned ${cards.length} discarded tokens to supply.`});
+      else note(g,a.source,`Returned ${cards.length} discarded token${cards.length===1?'':'s'} to company ${c.id}'s supply.`,c.id);
       if(a.moveAfter!==undefined)push(g,move(a.moveAfter,1,a.source));
       break;
     }
     case 'repair': {
       if(!a.intel&&a.source!==undefined&&g.companies[a.source].founder===9)(g.harryUsed??=[]).push(a.source);
-      const recovered=c.down;c.down=false;c.hiringFumble=false;
-      if(recovered&&c.founder===20)drawFounderValue(g,controller(g,c.id));
+      const recovered=c.down||c.hiringFumble;c.down=false;c.hiringFumble=false;
+      if(recovered&&c.founder===20)push(g,move(c.id,2,c.id));
       if(a.intel)g.race.log.push({company:c.id,founder:-1,intel:true,intelKind:'recover',intelPlayer:r.intelContext?.player,text:`Company ${c.id} recovered from its fumble.`});
       else note(g,a.source,`Company ${c.id} recovered from its fumble.`);
       break;
@@ -270,35 +335,34 @@ export function choosePower(g) {
   function value(cid,from,to) {
     const c=g.companies[cid],price=companyValue(to,g.rules)-companyValue(from,g.rules)+(to-from)*companyValue(g.rules.checkpoints.at(-1),g.rules)/g.rules.checkpoints.at(-1)*0.2;
     const own=held(c,id),rival=g.players.filter(p=>p.id!==id).reduce((s,p)=>s+held(c,p.id),0);
+    if(g.liveDice)return (trackExitPrice(g,to)-trackExitPrice(g,from)+(to-from)*.18)*(own-.3*rival)/(g.publicFlow&&g.payoutMode!=='perShare'?Math.max(1,c.tokens.length):1);
     return price*(own-0.3*rival)/Math.max(1,c.tokens.length);
   }
   function score(actions){let sum=0;
     for(const a of actions){const c=g.companies[a.company],p=c?.position??0;
+      if(a.kind==='payFounder')sum-=a.amount;
       if(a.kind==='adoptGrowth'){
         const card=g.race?.card??g.reviewCard;
         const impact=cid=>{const t=g.companies[cid],p=t.position,leading=p===Math.max(...g.companies.map(x=>x.position));
-          if(t.down&&card.signature!=='recover')return .7*value(cid,p,Math.min(24,p+1.5));
+          if(t.down&&card.signature!=='recover')return .7*value(cid,p,Math.min(24,p+1.5))+(t.founder===20?value(cid,p,Math.min(24,p+2)):0);
           if(card.effect==='fumble')return t.founder===11?value(cid,p,Math.min(24,p+2)):-.7*value(cid,p,Math.min(24,p+1.5));
           const amount=card.signature==='breakthrough'?(leading?1:3):(card.printed??0)+(t.founder===8&&!leading?1:0);
           return value(cid,p,Math.min(24,p+amount));};
         sum+=impact(c.id)-impact(card.company)-.2;
       }
-      if(a.kind==='returnResolved')sum+=.5*value(c.id,p,Math.min(24,p+1.5));
+      if(a.kind==='returnDiscard'){const card=(g.removed??g.discarded??[]).find(t=>t.id===a.card);sum+=.5*value(c.id,p,Math.max(0,Math.min(24,p+(card?.effect==='fumble'?-1:(card?.printed??0)))));}
       if(a.kind==='move')sum+=value(c.id,p,Math.min(g.rules.checkpoints.at(-1),a.destination??p+a.amount));
-      if(a.kind==='transfer'){
-        const target=g.companies[a.target];
-        // Value future slot output versus the slot sacrificed; immediate supply is scored separately.
-        sum+=value(target.id,target.position,Math.min(24,target.position+slotCards(target,target.reserve+1)));
-        sum-=value(c.id,p,Math.min(24,p+slotCards(c,c.reserve)));
-      }
       if(a.kind==='batch')sum+=score(a.moves);
       if(a.kind==='signatureSwap'){const t=g.companies[a.target];sum+=value(c.id,p,t.position)+value(t.id,t.position,p);}
       if(a.kind==='fumble'&&!c.down){
-        if(c.founder===11&&!c.hiringFumble&&duringReveal(g))sum+=value(c.id,p,Math.min(24,p+2));
+        if(c.founder===11&&!c.hiringFumble&&duringRevealRound(g)&&!(g.danUsed??[]).includes(c.id))sum+=value(c.id,p,Math.min(24,p+((g.roundDice||g.diceRevision>=145)?1:2)));
         else {sum-=0.7*value(c.id,p,Math.min(24,p+1.5));for(const x of g.companies)if(x.id!==c.id&&x.founder===5&&!x.down&&!x.hiringFumble)sum+=value(x.id,x.position,Math.min(24,x.position+1));}
       }
       if(a.kind==='returnSupply'){sum+=.5*value(c.id,p,Math.min(24,p+1.5*(a.count??1)));if(a.moveAfter!==undefined){const mover=g.companies[a.moveAfter];sum+=value(mover.id,mover.position,Math.min(24,mover.position+1));}}
-      if(a.kind==='repair'&&c.down)sum+=0.7*value(c.id,p,Math.min(24,p+1.5));
+      if(a.kind==='founderDie')sum+=value(c.id,p,Math.min(24,p+(c.down?0:7/6)));
+      if(a.kind==='returnDealFlow')sum+=.5*value(c.id,p,Math.min(24,p+7/3));
+      if(a.kind==='discardValue')sum-=1;
+      if(a.kind==='repair'&&c.down)sum+=0.7*value(c.id,p,Math.min(24,p+1.5))+(c.founder===20?value(c.id,p,Math.min(24,p+2)):0);
       if(a.kind==='addSupply'&&(c.supplyCount??c.supply?.length))sum+=value(c.id,p,Math.min(24,p+1.5*Math.min(a.count??1,c.supplyCount??c.supply.length)));
     }return sum;
   }
@@ -363,13 +427,13 @@ export function resumeRace(g,choice,base) {
   return pump(g,base);
 }
 
-export function resolveRevealPhase(g,stage,interactive=false) {
+export function resolveRevealPhase(g,stage,interactive=false,activeCompany=null) {
   if(g.race)throw Error('Finish the current founder decision first.');
   if(stage==='start'&&!g.intelMovementStarted){g.revealMovement=g.companies.map(()=>0);g.revealMoved=g.companies.map(()=>false);}
-  if(stage==='start'){g.harryUsed=[];g.julieUsed=[];}
+  if(stage==='start'&&!g.roundDice&&!(g.diceRevision>=147)){g.julieUsed=[];g.danUsed=[];g.stefanUsed=[];g.reidUsed=[];}
   g.race={startPositions:g.companies.map(c=>c.position),startArrivalOrders:g.companies.map(c=>c.arrivalOrder),stage,card:{kind:'phase'},revealed:stage==='end',interactive,
     used:(g.founderUsed??=[]),advanced:g.companies.map(()=>0),log:[],
-    queue:stage==='catchUp'?[{kind:'catchUp'}]:order(g).flatMap(company=>[{kind:stage==='start'?'phaseStart':'phaseEnd',company},{kind:'phaseResult',company}])};
+    queue:stage==='catchUp'?[{kind:'catchUp'},...(g.publicFlow?[{kind:'phaseResult',company:null}]:[])]:(activeCompany===null?order(g):[activeCompany]).flatMap(company=>[{kind:stage==='start'?'phaseStart':'phaseEnd',company},{kind:'phaseResult',company}])};
   return pump(g,()=>{throw Error('Phase powers do not draw cards.');});
 }
 
@@ -379,24 +443,16 @@ export function resolveIntelActions(g,actions,intelContext=null,{log=[],interact
  g.race={startPositions:before?.map(c=>c.position)??g.companies.map(c=>c.position),startArrivalOrders:before?.map(c=>c.arrivalOrder)??g.companies.map(c=>c.arrivalOrder),stage,intelContext,card:{kind:'phase'},revealed:false,interactive,
  used:(g.founderUsed??=[]),advanced:g.companies.map(()=>0),log:copy(log),
  queue:actions};
- return pump(g,()=>{throw Error('Intel does not draw growth cards.');});
+ return pump(g,()=>{throw Error('Value-card effects do not reveal growth tokens.');});
 }
 
-export function sharePurchaseActions(g,company,buyer){
+export function sharePurchaseActions(g,company,buyer,{auction=false,existing=false,previousLead=controller(g,company)}={}){
  const c=g.companies[company];
- if(c.founder!==7||c.down||c.hiringFumble||!c.tokens.some(t=>t.owner===buyer))return [];
- const shareholders=new Set(c.tokens.filter(t=>t.owner!==null).map(t=>t.owner)).size;
- return [move(company,3-shareholders,company)];
+ return c.founder===7&&!c.down&&!c.hiringFumble&&buyer!==previousLead?[move(company,2,company)]:[];
 }
-export function resolveSharePurchase(g,company,buyer){
- const actions=sharePurchaseActions(g,company,buyer);
+export function resolveSharePurchase(g,company,buyer,options={}){
+ const actions=sharePurchaseActions(g,company,buyer,options);
  return actions.length?resolveIntelActions(g,actions,null,{interactive:false,stage:'auction'}):null;
-}
-
-export function resumeCrisis(g,base){
- const q=g.crisisChoice;q.players.shift();
- if(g.companies[q.company].down&&q.players.length){g.phase='intelCrisis';g.queue=[q.players[0]];return;}
- delete g.crisisChoice;return pump(g,base);
 }
 
 export function shareholderReactions(g,player,targets=[],heldAtPlay=[]){

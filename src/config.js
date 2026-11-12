@@ -1,23 +1,22 @@
 import {compareRace} from './movement.js';
-export const VERSION = 97;
-export const REVEALS_PER_ROUND = 5;
+export const VERSION = 128;
+export const UI_VERSION = `${VERSION}`;
+export const REVEALS_PER_ROUND = 6;
 export const INVESTMENT_RISK_DISCOUNT = 0.25;
 export const FUNDS = [
   "Saul Grayam",
   "Marek Anderson",
   "Pieter Deal",
   "Reed Kaufman",
-  "Mary Meeker",
-  "John Doerr",
 ];
-export const SYMBOLS = ["●", "▲", "■", "◆", "⬟", "✚"];
+export const SYMBOLS = ["🌳", "🚀", "⚡", "🥚"];
 export const COMPANIES = [
-  "Gogol", "Amazin", "Weta", "Novidia", "Testra", "Obenay", "Orbix", "Airnest",
+  "Gogol", "Amazin", "Weta", "Novidia", "Testra", "Obenay",
 ].map((name, id) => ({
   id,
   name,
-  slots: [[2,1,2],[3,1,1],[2,2,1],[1,3,1],[1,1,3],[1,2,2],[2,2,1],[2,2,1]][id],
-  short: ["Go", "Am", "We", "No", "Te", "Ob", "Or", "Ai"][id],
+  slots: [[2,1,2],[3,1,1],[2,2,1],[1,3,1],[1,1,3],[1,2,2]][id],
+  short: ["Go", "Am", "We", "No", "Te", "Ob"][id],
   color: [
     "#eb6964",
     "#edbd39",
@@ -25,57 +24,60 @@ export const COMPANIES = [
     "#62bb89",
     "#aa8bdf",
     "#e982aa",
-    "#a9c545",
-    "#e8a45b",
   ][id],
 }));
 export const FOUNDERS = [
- ["Stefan Hobbes", "Once per round", "When another company lands on my space, I **move 2**.", "✦"],
- ["Matt Sikaberg", "Before the reveal", "If I am **not leading**, I may **move 2, then fumble**.", "⚡"],
- ["Jess Bazos", "Before the reveal", "I may **swap spaces** with a company **1 to 3 spaces away**.", "▰"],
- ["Gill Bates", "After the reveal", "I may **move another company 1**, then **move 1**.", "⊞"],
- ["Jenkins Wang", "At game end", "If I finish **penultimate**, my company may **exit for $75**.", "⌁"],
- ["Aidan Newman", "When a company fumbles", "I **move 1**.", "∞"],
- ["Ryan Chelsea", "Before the reveal", "If I am **not leading**, I **move 1** and **fumble the leaders**. Check leaders before I move.", "⌂"],
- ["Jerry Edison", "After an investor buys a share in my company", "I **move 3 minus my number of different shareholders**. A negative result moves me back.", "➤"],
- ["Liza Helms", "On my numbered growth cards", "**Add 1** unless I am **leading**.", "◇"],
- ["Harry Cage", "Once per reveal, when another company fumbles", "I may **recover it** and **deploy 2 of my cards**.", "☀"],
- ["Leon Dusk", "Once per round, when another company passes me", "They **fumble** and I **move 1**.", "↗"],
- ["Dan Saltman", "During the reveal", "If I would fumble, I **move 2 instead**.", "▦"],
- ["Max Bahnhof", "When I land on an occupied space", "I **move 1 more**.", "◎"],
- ["Zack Darcy", "Before the reveal", "I **move 1**.", "✴"],
- ["Mura Mirati", "Before the reveal", "I **deploy 1 card**.", "✹"],
- ["Lei-Lei Fi", "Before the reveal", "I may **pull a company 1 to 3 spaces away** to my space, then **fumble it**.", "◎"],
- ["Julie Hearts", "Once per reveal", "I may **use a revealed growth card as my company’s card**, including its power.", "⌂"],
- ["Melania Gherkins", "When a shareholder plays a value card on my company", "I **move 2**.", "≈"],
- ["Mack Ja", "Before the reveal", "I may **transfer 1 treasury slot** to another company, then **move 3**.", "⇄"],
- ["Brittney Wolfheart", "Before the reveal", "I may **join the next company ahead**, then **fumble everyone on that space**, including me.", "↗"],
- ["Mario Adonei", "While fumbled", "Companies **cannot pass me**. When I **recover**, my lead investor **draws 1 value card**.", "▰"],
- ["Reid Fastings", "Before discarding my growth card", "I may **return it to my supply**, then **move another company back 1**. Includes recovery discards.", "↶"]
+ ["Stefan Hobbes", "Once per reveal", "When another company lands on my space, I move 2.", "✦"],
+ ["Matt Sikaberg", "Before the reveal", "If I am not leading, I may move 2, then fumble.", "⚡"],
+ ["Jess Bazos", "Before the reveal", "I may swap spaces with a company 1 or 2 spaces away.", "▰"],
+ ["Gill Bates", "Before the reveal", "I may move any one company 1 space.", "⊞"],
+ ["Jenkins Wang", "At game end", "If I finish second to last, my company may exit for $75.", "⌁"],
+ ["Aidan Newman", "When a company fumbles", "I move 1.", "∞"],
+ ["Ryan Chelsea", "Before the reveal", "If I am not leading, I choose a leading company, move 1, then fumble that company.", "⌂"],
+ ["Jerry Edison", "When someone other than my lead investor buys a share in my company", "I move 2.", "➤"],
+ ["Liza Helms", "When my numbered growth token is revealed", "I add 1 to its movement unless I am leading.", "◇"],
+ ["Harry Cage", "Once per reveal", "When another company fumbles, I may recover it, then deploy 2 of my supply tokens.", "☀"],
+ ["Leon Dusk", "Once per round, when another company passes me", "That company fumbles and I move 1.", "↗"],
+ ["Dan Saltman", "Once per reveal", "If I would fumble, I move 2 instead.", "▦"],
+ ["Max Bahnhof", "While moving", "I skip spaces with other companies.", "◎"],
+ ["Zack Darcy", "Before the reveal", "I move 1.", "✴"],
+ ["Mura Mirati", "Before the reveal", "I deploy 1 supply token.", "✹"],
+ ["Lei-Lei Fi", "Before the reveal", "I may move another company 1 or 2 spaces away to my space, then fumble it.", "◎"],
+ ["Julie Hearts", "Once per reveal", "My lead investor may pay $2 to use another company’s revealed growth token for me.", "⌂"],
+ ["Melania Gherkins", "When a shareholder plays a value card on my company", "I move 1.", "≈"],
+ ["Retired founder", "Out of play", "Not in the founder pool.", "⇄"],
+ ["Brittney Wolfheart", "Before the reveal", "I may join the nearest company 1 or 2 spaces ahead, then fumble every company there, including me.", "↗"],
+ ["Mario Adonei", "When I recover from a fumble", "I move 2.", "▰"],
+ ["Reid Fastings", "Once per reveal", "I may put 1 discarded growth token on top of its company’s supply, then move that company back 2.", "↶"],
+ ["Mack Ja", "When I land on a space with other companies", "My lead investor gains $2.", "◉"],
+ ["Bony Ma", "When I land 1 space behind a lone company", "I swap spaces with that company.", "↗"],
+ ["Danilo Egg", "When a company sharing my space moves", "I move with it.", "↶"],
+ ["Patricio Colson", "When I land on an empty space", "Unless I am leading, I move 1 more. This extra step does not trigger my ability.", "◆"],
+ ["Anya Waikiki", "Before the reveal", "My lead investor may discard 1 value card. If they do, I move 2. No replacement.", "✦"]
 ].map(([name, trigger, action, icon], id) => ({id, name, trigger: trigger.replace(' · ', ', ').replace(', If ', ', if ').replace(', Unless ', ', unless ').replace(', Another ', ', another '), action, text: `${trigger.replace(' · ', ', ')}: ${action.replaceAll('**','')}`, icon,
- inspiredBy: ["Steve Jobs", "Mark Zuckerberg", "Jeff Bezos", "Bill Gates", "Jensen Huang", "Adam Neumann", "Brian Chesky", "Larry Ellison", "Elizabeth Holmes", "Larry Page", "Elon Musk", "Sam Altman", "Marc Benioff", "Jack Dorsey", "Mira Murati", "Fei-Fei Li", "Julia Hartz", "Melanie Perkins", "Jack Ma", "Whitney Wolfe Herd", "Dario Amodei", "Reed Hastings"][id],
+ inspiredBy: ["Steve Jobs", "Mark Zuckerberg", "Jeff Bezos", "Bill Gates", "Jensen Huang", "Adam Neumann", "Brian Chesky", "Larry Ellison", "Elizabeth Holmes", "Larry Page", "Elon Musk", "Sam Altman", "Marc Benioff", "Jack Dorsey", "Mira Murati", "Fei-Fei Li", "Julia Hartz", "Melanie Perkins", "Jack Ma", "Whitney Wolfe Herd", "Dario Amodei", "Reed Hastings", "Jack Ma", "Pony Ma", "Daniel Ek", "Patrick Collison", "Anne Wojcicki"][id],
 }));
 export const RULES = Object.freeze({
-  intelMode: "off",
+  intelMode: "mixed",
   checkpoints: [8, 16, 24],
   maxCycles: 12, // Bot forecast horizon; never a settlement deadline.
   shareLimit: 5,
   payoutPlaces: 3,
   hedgeFund: false,
   catchUp: true,
-  burnPerRound: 3,
+  burnPerRound: 1,
   moneyScale: 1,
   currencyUnit: 1,
   bridgeCost: 3,
   secondaryCost: 5,
   conflictPayout: 5,
-  sellPayouts: [6,12,18],
+  sellPayouts: [3,6,9],
   muraMinimum: 5,
   wangExit: 75,
   revealsPerRound: REVEALS_PER_ROUND,
   projectPrices: [[1,4,7],[3,6,9],[5,8,11]],
-  startingCash: 50,
-  obligation: 55,
+  startingCash: 20,
+  obligation: 0,
   purchaseStep: 4,
   defaultFee: 0,
   exitScale: 5,
@@ -95,11 +97,11 @@ export const companyValue = (growth, rules = RULES) => {
   const g = Math.max(0, growth - 3);
   return rules.exitScale * Math.floor((g * g + 3 * g) / 2 / 5) * 5;
 };
-export const availableCash = p => p.cash - (p.locked ?? 0);
+export const availableCash = p => p.cash;
 export const fundingBand = growth => Math.min(2, Math.max(0, Math.floor((growth - 1) / 8)));
 export const fundingPrices = (leg, rules = RULES) => [...rules.projectPrices[leg]];
-export const minimumBid = (c, rules = RULES) => fundingPrices(fundingBand(c.position),rules)[0];
-export const fundedCards = (leg, payment, rules = RULES) => fundingPrices(leg,rules).filter(n => payment >= n).length;
+export const minimumBid = (c, rules = RULES) => currencyUnit(rules);
+export const fundedCards = (leg, payment, rules = RULES) => Math.ceil(payment / FUNDING_DIVISOR);
 export const SPECIALS = [
  ["Ad revenue", "Deploy 1 card from my supply.", "add"],
  ["Reinvest profits", "Add 1 treasury slot (maximum 3).", "swapCard"],
@@ -108,12 +110,9 @@ export const SPECIALS = [
  ["Overtake", "After moving 2, swap spaces with 1 company up to 2 spaces ahead, if any.", "swap"],
  ["Research", "Move 1 if leading; otherwise, move 3. Check before moving.", "breakthrough"],
 ];
-// Final printed counts: 0, +1, +2, +3, fumble, setback. Novidia has 2 signatures; others have 3.
-export const DECK_PROFILES = [
- [0,12,7,0,1,0], [3,15,3,0,0,0], [0,5,11,0,3,0],
- [0,3,11,0,2,0], [0,5,11,0,2,0], [0,7,10,0,2,0],
- [2,8,7,0,1,0], [2,10,7,0,1,0],
-];
+// Fifteen tokens each; recovery-adjusted movement is approximately 26.
+// Columns: 0, +1, +2, +3, fumble, setback.
+export const DECK_PROFILES = [[0,0,14,0,1,0],[0,4,11,0,0,0],[0,0,4,8,3,0],[0,0,9,4,2,0],[0,2,5,6,2,0],[0,4,1,8,2,0]];
 export const DECK_THEMES = [
  ["Steady cash flow", "Gogol turns attention into advertising revenue. A dependable cash cow that keeps growing while flashier rivals make headlines."],
  ["Efficient reinvestment", "Amazin builds an empire on thin margins and relentless reinvestment. Patient investors back a business built to keep the deliveries coming."],
@@ -121,8 +120,6 @@ export const DECK_THEMES = [
  ["Speed needs supply", "Novidia sells the hardware everyone wants. Demand is soaring, but keeping the factories supplied is another story."],
  ["Driven to overtake", "Testra has its sights on the company ahead. Ambitious engineering and fierce competition turn a close race into a fight for position."],
  ["Chasing breakthroughs", "Obenay bets on research that could change everything. Chasing the frontier brings spectacular breakthroughs; defending the lead is harder."],
- ["Orbital launches", "Orbix makes big bets on the next launch. It burns through resources quickly, hoping each success will carry it further."],
- ["Bumpy expansion", "Airnest wants a room in every city. Fresh funding keeps expansion going, but local growing pains can slow the journey."]
 ];
 export const slotCards = (company, slot, companies = []) => slot === 0 ? 0 : COMPANIES[company.id].slots[slot-1];
 export const reserveCards = company => {
@@ -139,7 +136,6 @@ export function growthDeck(company) {
  DECK_PROFILES[company].forEach((count,n)=>{
   for(let i=0;i<count;i++)cards.push({id:`g${company}:${cards.length}`,kind:"growth",company,printed:n<4?n:0,signature:false,...(n>=4?{effect:n===4?"fumble":"setback"}:{})});
  });
- for(const special of cards.filter(c=>c.printed===(company%6===3?1:2)).slice(0,company%6===3?2:3)){special.signature=SPECIALS[company%6][2];}
  return cards;
 }
 
@@ -160,7 +156,10 @@ export const TRACK_COORDS = Array.from({length:24}, (_,i) =>
 export const raceRank = (company, companies) => 1 + companies.filter(c=>compareRace(c,company)<0).length;
 export const podium = (companies, places=3) => [...companies].sort(compareRace).slice(0,places).map(c=>c.id);
 
-export const canHireFounder = () => true;
+// Keep component IDs stable while Mack Ja is out of the playable pool.
+export const ACTIVE_FOUNDERS = FOUNDERS.filter(f=>f.id!==18).map(f=>f.id);
+export const canHireFounder = id => ACTIVE_FOUNDERS.includes(id);
+export const capitalPenalty = player => CAPITAL_DEDUCTION * (player.capital ?? 0);
 
 export const sharePayout = (value, shares, rules = RULES) => (rules.moneyScale??1)*Math.floor(value/shares/(rules.moneyScale??1));
 
@@ -172,3 +171,5 @@ export const companyOrder=companies=>{const split=Math.ceil(companies.length/2);
 
 // IPO is confirmed only after every round effect has resolved.
 export const ipoFinisher = g => podium(g.companies.filter(c=>c.position>=g.rules.checkpoints.at(-1)&&!c.down),1)[0]??null;
+
+export const CAPITAL_CASH=10,CAPITAL_DEDUCTION=10,FUNDING_DIVISOR=5;

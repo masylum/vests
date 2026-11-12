@@ -1,0 +1,107 @@
+{
+  "revision": 3,
+  "termination": {
+    "formula": "count(status=complete)/attempted",
+    "unit": "fraction",
+    "denominator": "all attempted games in a cohort",
+    "eligibility": "all games including stalls/failures/cutoffs",
+    "target": "1",
+    "interpretation": "Failure to finish is an unresolved rules or execution issue."
+  },
+  "actions": {
+    "formula": "count(action events)",
+    "unit": "player turns",
+    "denominator": "completed games for ending distributions",
+    "eligibility": "complete; raw stalled totals retained separately",
+    "target": "exploratory, no fixed target",
+    "interpretation": "Does not count bids or acknowledgements as turns."
+  },
+  "meaningful": {
+    "formula": "commands excluding continue and committed roll; include setup roll choices",
+    "unit": "decisions",
+    "denominator": "completed games",
+    "eligibility": "complete",
+    "target": "exploratory",
+    "interpretation": "Includes legal bids/passes and power choices, not human minutes."
+  },
+  "auctions": {
+    "formula": "auctionHistory.length",
+    "unit": "auctions",
+    "denominator": "completed games",
+    "eligibility": "all auction modes including value-generated",
+    "target": "exploratory",
+    "interpretation": "Different from action count or issued shares."
+  },
+  "prices": {
+    "formula": "paid amounts of auctions with a winner",
+    "unit": "coins per sold share",
+    "denominator": "successful auctions in completed games",
+    "eligibility": "winner not null",
+    "target": "exploratory spread",
+    "interpretation": "Quantiles describe sales; no independent-sale confidence interval."
+  },
+  "spread": {
+    "formula": "max(final positions)-min(final positions)",
+    "unit": "spaces",
+    "denominator": "completed games",
+    "eligibility": "after full final purchase",
+    "target": "exploratory",
+    "interpretation": "Not the winning player's score margin."
+  },
+  "zeroPaying": {
+    "formula": "count(companies with final position<=10)",
+    "unit": "companies",
+    "denominator": "completed games",
+    "eligibility": "six companies each game",
+    "target": "exploratory",
+    "interpretation": "Progressive payout penalty for laggards."
+  },
+  "values": {
+    "formula": "market kind present at action start; valueResolved events per kind",
+    "unit": "exposures/plays",
+    "denominator": "all primary self and mixed attempts",
+    "eligibility": "deduplicate kind within each market exposure",
+    "target": "exploratory",
+    "interpretation": "Exposure is not legal play opportunity; no-effect is engine flag, not causal utility."
+  },
+  "founders": {
+    "formula": "action starts active/available; founder events; resolver founderMovement ledger",
+    "unit": "company-actions/market-actions/hires/spaces",
+    "denominator": "all primary attempts",
+    "eligibility": "compatible founders",
+    "target": "exploratory",
+    "interpretation": "Gross attributed movement, not causal power; Max skipping and Mack cash are outside this movement ledger."
+  },
+  "winCredit": {
+    "formula": "sum(1/number_of_winners for winning seats)/seats",
+    "unit": "fraction",
+    "denominator": "completed mixed-policy seats",
+    "eligibility": "ties split credit",
+    "target": "exploratory",
+    "interpretation": "Conditional on completion and heterogeneous opponents; not optimal strategy."
+  },
+  "rounds": {
+    "formula": "final round index",
+    "unit": "rounds started",
+    "denominator": "completed games",
+    "eligibility": "all completed games; leg timings conditional on reaching that leg",
+    "target": "exploratory",
+    "interpretation": "One action per player; final round can be partial."
+  },
+  "reveals": {
+    "formula": "metrics.reveals",
+    "unit": "joint reveals",
+    "denominator": "completed games",
+    "eligibility": "all completed games; leg timings conditional on reaching that leg",
+    "target": "exploratory",
+    "interpretation": "Includes one-die setup; purchased shares reveal two dice together."
+  },
+  "legEnds": {
+    "formula": "legEnd events with turnNumber",
+    "unit": "completed turns since setup",
+    "denominator": "completed games",
+    "eligibility": "all completed games; leg timings conditional on reaching that leg",
+    "target": "exploratory",
+    "interpretation": "Three companies currently meet the boundary; games can end without finishing leg one."
+  }
+}

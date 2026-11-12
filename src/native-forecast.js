@@ -24,7 +24,7 @@ export function setNativeBackend(value){if(!['auto','native','js'].includes(valu
 export function nativeForecastStats(){return {available:!!addon,backend,calls,fallbacks,coreMs,packingMs,decodingMs};}
 const signatures=['','add','swapCard','recover','recycle','swap','breakthrough'];
 export function nativeRollouts(v,id,options,decks){
- if(backend==='js'||!addon)return null;
+ if(backend==='js'||!addon||v.version>=98)return null; // v97 accelerator does not model two-action funding.
  const started=performance.now();
  const {samples,auctionOutcome,blindFounders,fundingDelay}=options,r=v.rules,N=v.companies.length,P=v.players.length;
  // Keep unusual experimental states on the authoritative JS path.

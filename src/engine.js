@@ -1,7 +1,10 @@
+import {grantGrowth} from './deal-flow.js';
+import {CAPITAL_CASH} from './config.js';
+import {NEW_CARDS,FUNDRAISE_CARDS,TWO_COMPANY_CARDS,expansionChoices} from './card-expansion.js';
 import {blockedDestination,recordArrivals} from './movement.js';
 import {shareCount,shareLeader} from './ownership.js';
 import {INTEL_MODES,MAX_VALUE_HAND,canDrawIntel,canExchangeIntel,intelDeck,intelTargets,intelSecondTargets,playableIntel,invested,intelLead} from './intel.js';
-import {canHireFounder} from './config.js';
+import {canHireFounder,ACTIVE_FOUNDERS,capitalPenalty} from './config.js';
 import {canExit,dilution} from './config.js';
 import { REVEALS_PER_ROUND } from "./config.js";
 import {checkpointReached, podium, ipoFinisher} from './config.js';
@@ -48,25 +51,18 @@ const order = (g, first = g.first) =>
 const emit = (g, e) => {
   if (!g.fast) g.log.push({ leg: g.leg, cycle: g.cycle, ...clone(e) });
 };
-// Founder rewards do not consume the investor's value action.
-export function drawFounderValue(g,id){
- if(g.forecast||g.rules.intelMode==='off'||id==null||!canDrawIntel(g,id))return false;
- if(!g.intelDeck.length)g.intelDeck=shuffle(g,g.intelDiscard.splice(0));
- g.players[id].intel.push(g.intelDeck.shift());g.metrics.intelDraws=(g.metrics.intelDraws??0)+1;
- emit(g,{type:'intelDraw',player:id,founder:20});return true;
-}
 export const currentPlayer = (g) =>
   g.ended ? null : g.queue.length ? g.queue[0] : g.active;
-export function createGame({ seed = 42, players = 4, rules = {} } = {}) {
+export function createGame({ seed = 42, players = 4, rules = {}, variant = 'classic' } = {}) {
   check(
-    integer(seed, 0, 0xffffffff) && integer(players, 2, 5),
-    "Choose 2 to 5 investors and a whole seed.",
+    integer(seed, 0, 0xffffffff) && integer(players, 2, 4),
+    "Choose 2 to 4 investors and a whole seed.",
   );
   check(
     Object.keys(rules).every((k) => ["exitMultiplier", "currencyUnit", "bridgeCost", "secondaryCost", "conflictPayout", "sellPayouts", "intelMode", "burnPerRound", "moneyScale", "muraMinimum", "wangExit", "catchUp", "purchaseStep", "exitScale", "defaultFee", "purchaseBase", "exitLinear", "exitCurve", "ipoValue", "growthDivisor", "checkpointCount", "costAcceleration", "payoutPlaces", "startingCash", "obligation", "projectPrices", "hedgeFund", "revealsPerRound"].includes(k)),
     "Unknown experimental rule.",
   );
-  const r = clone({ ...RULES, burnPerRound:players-1, payoutPlaces:Math.floor((players+2)/2), ...rules });
+  const r = clone({ ...RULES, payoutPlaces:Math.floor((players+2)/2), ...rules });
   check(r.currencyUnit===1,'Invalid currency unit.');
   check(integer(r.secondaryCost,0,100)&&integer(r.bridgeCost,0,100)&&integer(r.conflictPayout,0,100)&&Array.isArray(r.sellPayouts)&&r.sellPayouts.length===3&&r.sellPayouts.every(n=>integer(n,0,100)),'Invalid value-card cash settings.');
   check(Object.hasOwn(INTEL_MODES,r.intelMode), "Invalid intel mode.");
@@ -80,6 +76,7 @@ export function createGame({ seed = 42, players = 4, rules = {} } = {}) {
   check(Array.isArray(r.projectPrices)&&r.projectPrices.length===3&&r.projectPrices.every(row=>Array.isArray(row)&&row.length===3&&row.every((x,i)=>money(x,currencyUnit(r),1000,r)&&(!i||x>row[i-1]))),"Invalid funding prices.");
   const g = {
     version: VERSION,
+    valueDeckSize:intelDeck().length,
     seed,
     rng: seed,
     rules: r,
@@ -97,6 +94,7 @@ export function createGame({ seed = 42, players = 4, rules = {} } = {}) {
     founderMarket: [],
     pile: [],
     removed: [],
+    destroyed: [],
     returningCards: [],
     lastRevealed: null,
     log: [],
@@ -139,6 +137,7 @@ export function createGame({ seed = 42, players = 4, rules = {} } = {}) {
     g.players.push({
       id,
       cash: 0,
+      capital: 0,
       locked: 0,
       savedCash: 0,
       debt: 0,
@@ -150,14 +149,13 @@ export function createGame({ seed = 42, players = 4, rules = {} } = {}) {
     });
   const founders = shuffle(
     g,
-    Array.from({ length: FOUNDERS.length }, (_, i) => i),
+    [...ACTIVE_FOUNDERS],
   );
-  for (let id = 0; id < players + 2; id++)
+  for (let id = 0; id < (variant === 'dice' ? 6 : players + 2); id++)
     g.companies.push({
       id,
       position: 1,
       purchased: 0,
-      reserve: 0,
       tokens: [],
       lastBuy: Array(players).fill(0),
       supply: shuffle(g, growthDeck(id)),
@@ -176,7 +174,7 @@ export function createGame({ seed = 42, players = 4, rules = {} } = {}) {
   g.founderSupply = founders;
   g.first = Math.floor(random(g) * players);
   g.active = g.first;
-  if(r.intelMode!=="off"){g.intelDeck=shuffle(g,intelDeck(r.intelMode));g.intelDiscard=[];g.valueUsed=[];for(const p of g.players)p.intel=g.intelDeck.splice(0,1);}
+  if(r.intelMode!=="off"){g.intelDeck=shuffle(g,intelDeck(r.intelMode));g.intelDiscard=[];g.valueUsed=[];for(const p of g.players)p.intel=g.intelDeck.splice(0,3);}
   beginLeg(g);
   assertGame(g);
   return g;
@@ -188,19 +186,19 @@ function beginLeg(g) {
     p.lp = fixedLP(g.players.length,g.leg,g.rules);
     p.cash += p.lp.cash;
     p.obligation += p.lp.repayment;
-    p.lpObligations += Number(p.lp.cash>0);
+    p.lpObligations += Number(p.lp.repayment>0);
     g.bank.issued += p.lp.cash;
   }
   startCycle(g);
 }
 export function eligibleCompanies(g,id) {
-  return g.companies.filter(c => c.reserve < 3 && c.tokens.length < g.rules.shareLimit && (c.supplyCount ?? c.supply?.length) && (lead(c) === id || lead(c) === null)).map(c=>c.id);
+  if(g.variant==='dice')return g.companies.map(c=>c.id);
+  return g.companies.filter(c => (lead(c) === null || lead(c) === id) && c.tokens.length < g.rules.shareLimit && (c.supplyCount ?? c.supply?.length)).map(c=>c.id);
 }
 function startCycle(g) {
-  delete g.burnEligible;g.pileBurned=false;
   for (const c of g.companies) {c.flags={};c.revealedCycle=0;c.boughtCycle=0;}
   g.lastRevealed=null;g.founderUsed=[];g.revealMovement=g.companies.map(()=>0);g.revealMoved=g.companies.map(()=>false);g.intelMovementStarted=true;delete g.intelOrder;delete g.afterIntelDone;delete g.catchUpDone;delete g.catchUpResult;
-  g.purchaseSummary=[];delete g.poolSize;g.drawsLeft=0;
+  g.purchaseSummary=[];g.harryUsed=[];delete g.poolSize;g.drawsLeft=0;
   g.valueUsed=[];
   g.called=[];g.callOrder=order(g);g.callIndex=0;
   g.metrics.cycles++;emit(g,{type:"cycle"});nextAuction(g);
@@ -209,7 +207,7 @@ function nextAuction(g) {
   delete g.auction;
   while(g.callIndex < g.callOrder.length) {
     const id=g.callOrder[g.callIndex++];
-    g.phase='call';g.queue=[id];g.active=id;return;
+    g.actionsLeft=2;g.weekendUsed=false;g.turnHires=[];g.turnPlayer=id;g.phase='call';g.queue=[id];g.active=id;return;
   }
   buyGrowth(g);
 }
@@ -227,7 +225,7 @@ function resolveBids(g) {
   }
   const top = positive.filter((b) => b.amount === positive[0].amount);
   if (top.length === 1) {
-    finishAuction(g, top[0].player, positive.length===1 ? positive[0].amount : Math.max(a.reserve, positive[1].amount));
+    finishAuction(g, top[0].player, a.mode==='tender'||positive.length===1 ? positive[0].amount : Math.max(a.reserve, positive[1].amount));
     return;
   }
   g.metrics.ties++;
@@ -248,25 +246,22 @@ function finishAuction(g, winner, paid) {
     c = g.companies[a.company];
   a.winner = winner;
   a.paid = paid;
-  g.auctionHistory.push({company:a.company,host:a.host,bids:clone(a.bids),winner,paid,cash:g.players.map(p=>p.cash)});
+  g.auctionHistory.push({company:a.company,host:a.host,bids:clone(a.bids),winner,paid,cash:g.players.map(p=>p.cash),context:{mode:a.mode,poolWeights:g.companies.map(c=>g.pile.filter(t=>t.company===c.id).length),positions:g.companies.map(c=>c.position),founders:g.companies.map(c=>c.founder),owners:g.companies.map(c=>c.tokens.map(t=>t.owner)),down:g.companies.map(c=>!!(c.down||c.hiringFumble))}});
   if (winner === null) g.metrics.unsold++;
   else {
     const p = g.players[winner];
-    const commitment = Math.max(paid, a.bids.find(b=>b.player===winner).amount);
-    a.locked = commitment-paid;
-    p.locked += a.locked;
     p.cash -= paid;
     g.bank.burn += paid;
-    const charges = Math.min(fundedCards(fundingBand(c.position),paid,g.rules), 3-c.reserve);
-    c.reserve += charges;
-    a.cards = reserveCards(c);
-    a.charges = charges;
+    a.cards = g.variant==='dice' ? 1 : deployInvestment(g,c,paid);
+    const previousLead=lead(c),wasShareholder=holdings(c,winner)>0;delete c.mandate;
     c.tokens.push({ id: c.tokens.length + 1, owner: winner, paid, boughtLeg:g.leg });
     c.lastBuy[winner] = ++g.serial;
+    if(g.variant==='dice'&&!(g.diceRevision>=145&&g.cardFundraise)){const entry=grantGrowth(g,winner,c.id);if(g.diceRevision>=145){entry.bonusDice=g.fundingCard?.bonusDice??0;entry.remaining+=entry.bonusDice;}}
     g.metrics.issued++;
     g.metrics.payments.push(paid);
     a.bonusCards=0;
-    a.reactions=resolveSharePurchase(g,c.id,winner)?.reactions??[];
+    a.reactions=resolveSharePurchase(g,c.id,winner,{auction:true,existing:wasShareholder,previousLead})?.reactions??[];
+    if(a.mode==='underwritten'&&winner!==a.host){const extra=c.supply.splice(0,2);g.pile.push(...extra);shuffle(g,g.pile);g.metrics.entered+=extra.length;a.bonusCards=extra.length;}
 
   }
   g.queue = [];
@@ -274,23 +269,20 @@ function finishAuction(g, winner, paid) {
   g.phase = "auctionResult";
   emit(g, { type: "auction", ...a });
 }
-export function deployReserves(g) {
-  for(const c of g.companies)if(c.reserve>0||slotCards(c,0,g.companies)>0){
-    const funded=c.reserve>0,fromReserve=c.reserve;
-    const cards=c.supply.splice(0,slotCards(c,c.reserve,g.companies)).map(card=>({...card,paid:funded,fundingCount:(card.fundingCount??Number(!!card.paid))+Number(funded)}));
-    c.reserve=Math.max(0,c.reserve-1);if(!c.supply.length)c.reserve=0;
-    c.purchased+=funded?cards.length:0;c.boughtCycle=cards.length;
-    g.pile.push(...cards);g.metrics.purchased+=funded?cards.length:0;g.metrics.entered+=cards.length;
-    g.purchaseSummary.push({company:c.id,count:cards.length,spent:0,fromReserve,toReserve:c.reserve});
-    emit(g,{type:"deploy",company:c.id,count:cards.length,reserve:c.reserve});
-  }
+export function deployInvestment(g,c,payment) {
+  const cards=c.supply.splice(0,fundedCards(fundingBand(c.position),payment,g.rules)).map(card=>({...card,paid:true,fundingCount:(card.fundingCount??Number(!!card.paid))+1}));
+  c.purchased+=cards.length;c.boughtCycle=(c.boughtCycle??0)+cards.length;
+  g.pile.push(...cards);shuffle(g,g.pile);
+  g.metrics.purchased+=cards.length;g.metrics.entered+=cards.length;
+  g.purchaseSummary??=[];g.purchaseSummary.push({company:c.id,count:cards.length,spent:payment});
+  emit(g,{type:'deploy',company:c.id,count:cards.length});return cards.length;
 }
+// Retained for historical callers; funding now deploys immediately.
+export function deployReserves(g) {}
 function buyGrowth(g) {
   g.revealStartPositions=g.companies.map(c=>c.position);
   g.revealStartArrivalOrders=g.companies.map(c=>c.arrivalOrder);
   deployReserves(g);
-  // Cards deployed by reveal-time powers get one reveal before they can burn.
-  g.burnEligible=g.pile.map(card=>card.id);
   shuffle(g,g.pile);g.drawsLeft=Math.min(g.rules.revealsPerRound,g.pile.length);g.poolSize=g.pile.length;
   g.revealEnded=false;
   g.queue=[];g.active=g.first;g.phase="purchaseResult";
@@ -305,7 +297,6 @@ export function resolveCardBase(g, card) {
     owner.history.push(g.forecast?original:clone(original));g.removed.push({...original,discarded:true});
     g.metrics.wasted++;g.metrics.wastedPaid+=Number(!!original.paid);g.metrics.deferred=(g.metrics.deferred??0)+1;
     c.down=false;c.hiringFumble=false;
-    if(c.founder===20)drawFounderValue(g,lead(c));
     const event={type:'deferred',card:g.forecast?original:clone(original),deferred:true,effect:{company:c.id,before,after:before}};emit(g,event);g.lastRevealed=event;return event;
   }
   if(card.paid)g.metrics.revealedPaid++;
@@ -327,8 +318,7 @@ export function resolveCardBase(g, card) {
     const founder=g.race?.bonus ?? 0, recovered=!!c.down&&card.signature==="recover", fumble=!!c.down&&!recovered;
     const printed=card.signature==="breakthrough"?(positions[c.id]<Math.max(...positions)?3:1):card.printed;
     const requested=printed+founder,movement=fumble?0:Math.max(0,requested);
-    c.position=blockedDestination(g.companies,c.id,c.position,Math.min(g.rules.checkpoints.at(-1),c.position+movement));c.down=false;
-    if(recovered&&c.founder===20)drawFounderValue(g,lead(c));
+    c.position=blockedDestination(g.companies,c.id,c.position,Math.min(g.rules.checkpoints.at(-1),c.position+movement),false,g.rules.checkpoints.at(-1));c.down=false;
     event.effect={company:c.id,before:positions[c.id],after:c.position,printed,signature:0,founder,multiplier:1,addition:0,fumble,recovered,requested};
     owner.history.push(g.forecast?physical:clone(physical));
     if(card.signature==="recycle")(g.returningCards??=[]).push({...physical,revealed:true});
@@ -341,19 +331,13 @@ export function resolveCardBase(g, card) {
     
     g.metrics.fumbles += Number(fumble);
   }
-  if(card.signature)resolveSpecial(g,card);
+
   const moves=event.moves??[{company:card.company,before:positions[card.company],after:g.companies[card.company].position}];
   recordArrivals(g,moves);
   for(const m of moves)markIPO(g,m.company);
   g.lastRevealed = event;
   emit(g, event);
   return event;
-}
-function resolveSpecial(g,card) {
- const c=g.companies[card.company];
- const add = target => {if(target?.supply.length){g.pile.push(target.supply.shift());g.metrics.entered++;}};
- if(card.signature==="add"){add(c);shuffle(g,g.pile);}
- if(card.signature==="swapCard")c.reserve=Math.min(3,c.reserve+1);
 }
 export function resolveCard(g, card, {interactive = false} = {}) {
   return beginRace(g, card, resolveCardBase, interactive);
@@ -371,10 +355,9 @@ function drawNext(g) {
 function checkRevealEnd(g) {
   if (g.race) return;
   if (!g.revealEnded && (!g.drawsLeft || !g.pile.length)) {
+    burnPile(g);
     returnGrowthCards(g);
-    if(!g.pileBurned){burnPile(g);g.pileBurned=true;}
     g.queue=[];g.active=g.first;
-    if(g.companies.some(c=>c.founder===3&&!c.down&&!c.hiringFumble&&lead(c)!==null)){g.phase='afterRevealReady';return;}
     g.revealEnded=true;
   }
   if(g.revealEnded&&g.rules.catchUp){g.phase=g.catchUpDone?'catchUpResult':'catchUpReady';g.queue=[];g.active=g.first;return;}
@@ -390,25 +373,15 @@ export function returnGrowthCards(g){
  g.returningCards=[];
  emit(g,{type:'returnGrowth',destination:'supply',count:cards.length,companies:cards.map(c=>c.company)});
 }
-export function hedgeFundInvest(g) {
- if(!g.rules.hedgeFund||g.companies.some(c=>c.position>=24))return;
- const last=Math.min(...g.companies.map(c=>c.position));
- for(const c of g.companies.filter(c=>c.position===last)){
-  if(c.reserve!==0||!c.supply.length||c.tokens.length>=g.rules.shareLimit)continue;
-  c.reserve=3;
-  c.tokens.push({id:c.tokens.length+1,owner:null,paid:0,boughtLeg:g.leg,hedge:true});
-  g.metrics.hedgeInvestments=(g.metrics.hedgeInvestments??0)+1;
-  emit(g,{type:'hedge',company:c.id,position:c.position});
- }
-}
+// Retired experimental treasury investor; retained for historical imports.
+export function hedgeFundInvest(g) {}
 export function burnPile(g,rand=()=>random(g)) {
- if(g.ipoCompany!=null)return;
  const eligible=g.burnEligible?new Set(g.burnEligible):null;
  const cards=g.pile.filter(card=>!eligible||eligible.has(card.id));
  const count=Math.min(g.rules.burnPerRound??0,cards.length),burned=[];
  for(let i=0;i<count;i++){
   const [card]=cards.splice(Math.floor(rand()*cards.length),1);
-  g.pile.splice(g.pile.findIndex(c=>c.id===card.id),1);g.removed.push({...card,burned:true,public:true});burned.push(clone(card));
+  g.pile.splice(g.pile.findIndex(c=>c.id===card.id),1);g.removed.push({...card,discarded:true});g.companies[card.company].history.push(clone(card));burned.push(clone(card));
  }
  delete g.burnEligible;
  if(count){g.metrics.burned=(g.metrics.burned??0)+count;emit(g,{type:'burn',count,cards:burned});}
@@ -511,28 +484,39 @@ function applySales(g) {
   g.phase = "legResult";
   emit(g, { type: "settled", accounts: g.settlement.accounts });
 }
-export const canRaiseMoney=g=>!g.ended&&!g.finalExit&&!['settle','legResult'].includes(g.phase);
+export const canDrawEmptyHand=(g,id=currentPlayer(g))=>g.rules.intelMode!=='off'&&g.players[id].intel.length===0&&canDrawIntel(g,id);
+export const canRaiseMoney=g=>!g.ended&&g.phase==='call'&&g.actionsLeft>0&&g.players[currentPlayer(g)].capital<6;
 export function command(g, id, cmd) {
-  if(cmd?.type==='raiseMoney'){
-    check(canRaiseMoney(g)&&integer(id,0,g.players.length-1),'New LPs are available until final settlement starts.');
-    const p=g.players[id];
-    p.cash+=g.rules.startingCash;p.obligation+=g.rules.obligation;p.lpObligations++;g.bank.issued+=g.rules.startingCash;
-    g.metrics.raises=(g.metrics.raises??0)+1;
-    emit(g,{type:'raiseMoney',player:id,cash:g.rules.startingCash,obligation:g.rules.obligation,lpObligations:p.lpObligations});
-    return;
-  }
   check(!g.ended && id === currentPlayer(g), "Another investor must decide.");
   check(cmd && typeof cmd.type === "string", "Choose an action.");
   const p = g.players[id];
   switch (g.phase) {
     case "call": {
+      if(cmd.type==='pass'){check(!hasTurnAction(g,id),'An action is available.');g.actionsLeft=1;finishAction(g,id);break;}
+      if(cmd.type==='drawValue'){
+        check(canDrawEmptyHand(g,id),'Draw a value card only when your hand is empty and a card is available.');
+        replaceValue(g,id);emit(g,{type:'intelDraw',player:id,action:true});finishAction(g,id);break;
+      }
+      if(cmd.type==='raiseMoney'){
+        check(p.capital<6,'Capital is limited to six uses per game.');
+        p.cash+=CAPITAL_CASH;p.capital++;g.bank.issued+=CAPITAL_CASH;
+        emit(g,{type:'raiseMoney',player:id,cash:CAPITAL_CASH,capital:p.capital});finishAction(g,id);break;
+      }
+      if(cmd.type==='sellShare'){
+        check(integer(cmd.company,0,g.companies.length-1)&&holdings(g.companies[cmd.company],id)>0,'Choose a share you own.');
+        const c=g.companies[cmd.company],token=c.tokens.findLast(t=>t.owner===id);
+        delete c.mandate;token.owner=null;if(!holdings(c,id))c.lastBuy[id]=0;
+        const payout=g.rules.sellPayouts[fundingBand(c.position)];p.cash+=payout;g.bank.issued+=payout;g.metrics.sold++;
+        emit(g,{type:'sellShare',player:id,company:c.id,payout});
+        finishAction(g,id);break;
+      }
+      if(cmd.type==='valueAction'){check(g.rules.intelMode!=='off','Value cards are disabled.');check(g.players[id].intel.length>0,'You have no value cards.');beginValueTurn(g,id);break;}
       if(cmd.type==='changeFounder'){
         check(integer(cmd.company,0,g.companies.length-1)&&lead(g.companies[cmd.company])===id,'Choose a company you lead.');
 
         g.company=cmd.company;g.phase='founder';break;
       }
-      check(cmd.type==="call" && (cmd.company===null || eligibleCompanies(g,id).includes(cmd.company)),"Choose an unowned company or one you lead, or pass.");
-      if(cmd.company===null){emit(g,{type:'pass',player:id});beginValueTurn(g,id);break;}
+      check(cmd.type==="call" && (eligibleCompanies(g,id).includes(cmd.company)),"Choose a company you lead (or one without a leader), with supply and an unissued share.");
 
       g.called.push(cmd.company);g.auction={company:cmd.company,host:id,reserve:minimumBid(g.companies[cmd.company],g.rules),bids:[],winner:null,paid:0};
       g.auction.equityController=lead(g.companies[cmd.company]);
@@ -541,61 +525,53 @@ export function command(g, id, cmd) {
       g.queue=order(g);g.phase="bid";g.metrics.auctions++;break;
     }
     case "intelPlay": {
-      check(!g.valueUsed.includes(id),'You already used your value-card opportunity this round.');
+      if(cmd.type==='cancelValue'){delete g.intelOrder;delete g.intelTiming;g.phase='call';break;}
       if(cmd.type==='passValue'){
         check(!canDrawIntel(g,id)&&!canExchangeIntel(g,id)&&!p.intel.some(card=>intelTargets(g,id,card.kind).length),'Draw or play a card when possible.');
-        g.valueUsed.push(id);delete g.intelOrder;delete g.intelTiming;nextAuction(g);break;
+        if(!g.valueUsed.includes(id))g.valueUsed.push(id);delete g.intelOrder;delete g.intelTiming;finishAction(g,id);break;
       }
-      if(cmd.type==='drawValue'||cmd.type==='exchangeValue'){
-        const exchange=cmd.type==='exchangeValue';
-        if(exchange){
-          check(integer(cmd.card,0,p.intel.length-1),'Choose a card to discard.');
-          check(canExchangeIntel(g,id),'No different value card is available to draw.');
-        }else{
-          check(p.intel.length<MAX_VALUE_HAND,'You may hold at most 3 value cards. Play or exchange a card instead.');
-          check(canDrawIntel(g,id),'No value cards left to draw.');
-        }
+      if(cmd.type==='exchangeValue'){
+        check(integer(cmd.card,0,p.intel.length-1),'Choose a card to discard.');
+        check(canExchangeIntel(g,id),'No different value card is available to draw.');
         if(!g.intelDeck.length)g.intelDeck=shuffle(g,g.intelDiscard.splice(0));
-        // Draw before discarding so an exchange cannot give back the same card.
-        const drawn=g.intelDeck.shift();
-        if(exchange){const discarded=p.intel.splice(cmd.card,1)[0];g.intelDiscard.push(discarded);g.metrics.intelExchanges=(g.metrics.intelExchanges??0)+1;emit(g,{type:'intelExchange',player:id,discard:discarded.kind});}
-        else emit(g,{type:'intelDraw',player:id});
-        p.intel.push(drawn);g.valueUsed.push(id);g.metrics.intelDraws=(g.metrics.intelDraws??0)+1;
-        delete g.intelOrder;delete g.intelTiming;nextAuction(g);
+        // Draw before discarding so an exchange cannot return the same card.
+        const drawn=g.intelDeck.shift(),discarded=p.intel.splice(cmd.card,1)[0];
+        g.intelDiscard.push(discarded);p.intel.push(drawn);
+        g.metrics.intelExchanges=(g.metrics.intelExchanges??0)+1;
+        g.metrics.intelDraws=(g.metrics.intelDraws??0)+1;
+        emit(g,{type:'intelExchange',player:id,discard:discarded.kind});
+        if(!g.valueUsed.includes(id))g.valueUsed.push(id);
+        delete g.intelOrder;delete g.intelTiming;finishAction(g,id);
         break;
       }
       check(cmd.type==='playIntel'&&integer(cmd.card,0,p.intel.length-1),'Choose one value card to play.');
       const card=p.intel[cmd.card];
-      const result={kind:card.kind,player:id,heldCompanies:g.companies.filter(c=>holdings(c,id)>0).map(c=>c.id),company:cmd.company,target:cmd.target,before:g.companies.map(c=>({position:c.position,arrivalOrder:c.arrivalOrder,reserve:c.reserve,supply:c.supply.length,down:c.down,founder:c.founder,shares:holdings(c,id)})),reactions:[]};
+      const result={kind:card.kind,player:id,heldCompanies:g.companies.filter(c=>holdings(c,id)>0).map(c=>c.id),company:cmd.company,target:cmd.target,before:g.companies.map(c=>({position:c.position,arrivalOrder:c.arrivalOrder,supply:c.supply.length,down:c.down,founder:c.founder,shares:holdings(c,id)})),reactions:[]};
       check(playableIntel(g,card)&&intelTargets(g,id,card.kind).includes(cmd.company),'Choose an eligible card and company.');
       const c=g.companies[cmd.company];
+      if(NEW_CARDS[card.kind]){
+        if(TWO_COMPANY_CARDS.includes(card.kind))check(intelSecondTargets(g,id,card.kind,cmd.company).includes(cmd.target),'Choose a second portfolio company.');
+        const choices=expansionChoices(g,id,cmd.card,cmd.company);
+        if(card.kind==='rights')check(money(cmd.price,minimumBid(c,g.rules),availableCash(p),g.rules),'Name an affordable price at least the minimum.');
+        else check(choices.some(choice=>Object.entries(choice).every(([key,value])=>cmd[key]===value)),'Choose valid card options.');
+      }
       if(['swap','waste','headhunt'].includes(card.kind)||(card.kind==='move'&&cmd.target!=null))check(intelSecondTargets(g,id,card.kind,c.id).includes(cmd.target),'Choose a second eligible company.');
-      g.valueResult=result;p.intel.splice(cmd.card,1);g.intelDiscard.push(card);g.valueUsed.push(id);
-      g.metrics.intelPlays=(g.metrics.intelPlays??0)+1;emit(g,{type:'intelPlay',player:id,kind:card.kind,company:c.id});
+      g.valueResult=result;p.intel.splice(cmd.card,1);g.intelDiscard.push(card);if(!g.valueUsed.includes(id))g.valueUsed.push(id);
+      g.metrics.intelPlays=(g.metrics.intelPlays??0)+1;emit(g,{type:'intelPlay',player:id,kind:card.kind,company:cmd.company});
+      if(g.diceRevision>=145&&['inside','launch','smear','advisor'].includes(card.kind)){g.lastRevealed=null;applyDiceValue(g,id,card,cmd);if(!g.race)advanceIntel(g);break;}
+      if(NEW_CARDS[card.kind]){g.lastRevealed=null;applyExpansion(g,id,card,cmd);if(!g.race&&!g.cardFundraise)advanceIntel(g);break;}
       if(card.kind==='headhunt'){const other=g.companies[cmd.target];[c.founder,other.founder]=[other.founder,c.founder];g.metrics.founderSwaps++;emit(g,{type:'founderSwap',companies:[c.id,other.id],founders:[c.founder,other.founder]});}
-      if(['scout','inside','launch'].includes(card.kind)){
+      if(['inside','launch'].includes(card.kind)){
         g.lastRevealed=null;const deck=c.supply;
-        g.intelScout={player:id,company:c.id,kind:card.kind,cards:clone(card.kind==='inside'?g.pile:deck.slice(0,3))};g.phase='intelScout';break;
-      }
-            if(card.kind==='bridge'){p.cash-=g.rules.bridgeCost;g.bank.burn+=g.rules.bridgeCost;result.cashChange=-g.rules.bridgeCost;c.reserve++;}
-      if(card.kind==='learn'){const cards=c.supply.splice(0,3);g.removed.push(...cards.map(x=>({...x,burned:true})));g.metrics.burned=(g.metrics.burned??0)+cards.length;c.reserve=Math.min(3,c.reserve+1);}
-      if(card.kind==='secondary'){
-        p.cash-=g.rules.secondaryCost;g.bank.burn+=g.rules.secondaryCost;result.cashChange=-g.rules.secondaryCost;
-        c.reserve-=1;c.tokens.push({id:c.tokens.length+1,owner:id,paid:0,boughtLeg:g.leg});c.lastBuy[id]=++g.serial;g.metrics.issued++;
-      }
-      if(card.kind==='sell'){
-        const index=c.tokens.findLastIndex(t=>t.owner===id);c.tokens.splice(index,1);c.tokens.forEach((t,i)=>t.id=i+1);
-        if(!holdings(c,id))c.lastBuy[id]=0;
-        const payout=g.rules.sellPayouts[g.leg];p.cash+=payout;g.bank.issued+=payout;result.cashChange=payout;
+        g.intelScout={player:id,company:c.id,kind:card.kind,cards:clone(card.kind==='inside'?g.removed.filter(token=>token.company===c.id&&!token.burned):deck.slice(0,2))};g.phase='intelScout';break;
       }
       g.lastRevealed=null;
-      let actions=card.kind==='secondary'?sharePurchaseActions(g,c.id,id):[];
+      let actions=[];
       if(card.kind==='advisor')actions=[{kind:'returnSupply',company:c.id,count:2,intel:true},{kind:'move',company:c.id,amount:1,intel:true}];
       if(card.kind==='recover')actions=[{kind:'move',company:c.id,amount:1,intel:true},...(c.down||c.hiringFumble?[{kind:'repair',company:c.id,source:c.id,intel:true}]:[])];
-      if(card.kind==='waste'){c.reserve--;g.companies[cmd.target].reserve++;}
       if(card.kind==='conflict'){p.cash+=g.rules.conflictPayout;g.bank.issued+=g.rules.conflictPayout;result.cashChange=g.rules.conflictPayout;actions=[{kind:'move',company:c.id,amount:-2,intel:true}];}
       if(card.kind==='move')actions=[c.id,...(cmd.target==null?[]:[cmd.target])].map(company=>({kind:'move',company,amount:1,intel:true}));
-      if(card.kind==='smear')actions=[{kind:'fumble',company:c.id},{kind:'addSupply',company:c.id,count:3,intel:true}];
+      if(card.kind==='smear')actions=[{kind:'fumble',company:c.id},{kind:'addSupply',company:c.id,count:2,intel:true}];
       if(card.kind==='back')actions=[{kind:'move',company:c.id,amount:-2,intel:true}];
       if(card.kind==='swap')actions=[{kind:'batch',moves:[{kind:'move',company:c.id,destination:g.companies[cmd.target].position,intel:true},{kind:'move',company:cmd.target,destination:c.position,intel:true}]}];
       if(actions.length)resolveIntelActions(g,actions,{player:id,kind:card.kind});
@@ -604,24 +580,21 @@ export function command(g, id, cmd) {
     case "intelScout": {
       const peek=g.intelScout,deck=g.companies[peek.company].supply,n=peek.cards.length;
       if(peek.kind==='inside'){
-        const choices=cmd.choices,count=Math.min(2,n);
-        check(cmd.type==='scoutIntel'&&Array.isArray(choices)&&choices.length===count&&new Set(choices).size===count&&choices.every(i=>integer(i,0,n-1)),'Choose 2 different growth cards (or the only card remaining).');
-        const cards=choices.map(i=>peek.cards[i]),ids=new Set(cards.map(c=>c.id));
-        check(cards.every(card=>g.pile.some(c=>c.id===card.id)),'Choose available growth cards.');
-        g.pile=g.pile.filter(c=>!ids.has(c.id));
-        for(const card of cards){g.companies[card.company].history.push(clone(card));g.removed.push({...card,discarded:true});}
-        g.metrics.pileDiscarded=(g.metrics.pileDiscarded??0)+cards.length;g.valueResult.discardedCards=clone(cards);emit(g,{type:'intelDiscardGrowth',player:id,cards});
-      }else if(peek.kind==='launch'){
-        check(cmd.type==='scoutIntel'&&integer(cmd.choice,0,n-1),'Choose a supply card.');
-        g.pile.push(deck.splice(cmd.choice,1)[0]);g.metrics.entered++;shuffle(g,deck);
-        for(const player of g.players)if(player.intelKnowledge?.company===peek.company)delete player.intelKnowledge;
+        const choices=cmd.choices;
+        check(cmd.type==='scoutIntel'&&Array.isArray(choices)&&choices.length===1&&new Set(choices).size===1&&choices.every(i=>integer(i,0,n-1)),'Choose 1 discarded token to return to the growth bag.');
+        const ids=new Set(choices.map(i=>peek.cards[i].id));
+        const cards=g.removed.filter(t=>ids.has(t.id)&&!t.burned);
+        check(cards.length===1,'Choose available discarded tokens.');
+        g.removed=g.removed.filter(t=>!ids.has(t.id));
+        g.companies[peek.company].history=g.companies[peek.company].history.filter(t=>!ids.has(t.id));
+        const returned=cards.map(({revealed,discarded,burned,paid,...t})=>({...t,paid:false}));
+        g.pile.push(...returned);shuffle(g,g.pile);g.metrics.entered+=1;
+        g.valueResult.returnedCards=clone(returned);emit(g,{type:'returnBag',company:peek.company,cards:returned});
       }else{
-        check(cmd.type==='orderIntel'&&Array.isArray(cmd.order)&&cmd.order.length===n&&new Set(cmd.order).size===n&&cmd.order.every(x=>integer(x,0,n-1)),'Arrange every inspected card once, with the bottom card last.');
-        const cards=deck.splice(0,n),sorted=cmd.order.map(i=>cards[i]);deck.unshift(...sorted.slice(0,-1));deck.push(sorted.at(-1));
-        if(peek.kind==='scout'){
-          for(const player of g.players)if(player.intelKnowledge?.company===peek.company)delete player.intelKnowledge;
-          p.intelKnowledge={company:peek.company,count:deck.length,top:clone(sorted.slice(0,-1)),bottom:clone(sorted.at(-1))};
-        }
+        check(peek.kind==='launch'&&cmd.type==='scoutIntel'&&integer(cmd.choice,0,n-1),'Choose one of the top 2 supply tokens.');
+        g.pile.push(deck.splice(cmd.choice,1)[0]);g.metrics.entered++;shuffle(g,g.pile);
+        for(const player of g.players)if(player.intelKnowledge?.company===peek.company)delete player.intelKnowledge;
+        p.intelKnowledge={company:peek.company,count:deck.length,top:clone(deck.slice(0,1)),bottom:null};
       }
       delete g.intelScout;advanceIntel(g);break;
     }
@@ -636,12 +609,33 @@ export function command(g, id, cmd) {
         check(canHireFounder(g.founderMarket[cmd.choice],g.leg), "That founder cannot be hired.");
         const old = c.founder;
         c.founder = g.founderMarket[cmd.choice];
+        c.flags.founderChanges=(c.flags.founderChanges??0)+1;
+        (g.turnHires??=[]).push(c.id);
         g.founderSupply.push(old);
         g.founderMarket[cmd.choice] = g.founderSupply.shift();
         g.metrics.founderSwaps++;
         emit(g, { type: "founder", company: c.id, old, founder: c.founder });
+        // Replacing a founder costs the action only; preserve the company's fumble state.
       }
-      if(cmd.choice<0&&g.rules.intelMode==='off')g.phase='call';else beginValueTurn(g,id);
+      if(cmd.choice<0)g.phase='call';else finishAction(g,id);
+      break;
+    }
+    case 'rights': {
+      check(cmd.type==='rights'&&typeof cmd.accept==='boolean','Accept or pass the named price.');
+      check(!cmd.accept||availableCash(p)>=g.auction.price,'You cannot afford that price.');
+      const a=g.auction;a.bids.push({player:id,amount:cmd.accept?a.price:0});g.queue.shift();
+      if(cmd.accept)finishAuction(g,id,a.price);
+      else if(!g.queue.length){a.bids.push({player:a.host,amount:a.price});finishAuction(g,a.host,a.price);}
+      break;
+    }
+    case 'openBid': {
+      const a=g.auction,min=a.highBidder==null?a.reserve:a.price+1;
+      check(cmd.type==='openBid'&&(cmd.amount===0||money(cmd.amount,min,availableCash(p),g.rules)),'Raise by at least $1 or pass permanently.');
+      a.bids.push({player:id,amount:cmd.amount});g.queue.shift();
+      if(cmd.amount){a.highBidder=id;a.price=cmd.amount;}else a.contenders=a.contenders.filter(x=>x!==id);
+      const remaining=a.contenders.filter(x=>x!==a.highBidder);
+      if(!remaining.length)finishAuction(g,a.highBidder??null,a.highBidder==null?0:a.price);
+      else {g.queue=order(g,(id+1)%g.players.length).filter(x=>remaining.includes(x));}
       break;
     }
     case "bid": {
@@ -713,9 +707,9 @@ export function command(g, id, cmd) {
     }
     default: {
       check(cmd.type === "continue", "Review the result, then continue.");
-      if (g.phase === "auctionResult") beginValueTurn(g,g.auction.host);
+      if (g.phase === "auctionResult"){if(g.cardFundraise){delete g.cardFundraise;advanceIntel(g);}else finishAction(g,g.auction.host);}
       else if(g.phase==='phaseResult'){resumePhase(g,resolveCardBase);checkRevealEnd(g);}
-      else if(g.phase==='valueResult')nextAuction(g);
+      else if(g.phase==='valueResult')finishAction(g,id);
       else if(g.phase==='afterRevealReady'){
         g.revealEnded=true;resolveRevealPhase(g,'end',true);checkRevealEnd(g);
       }else if(g.phase==='catchUpReady'){
@@ -733,7 +727,7 @@ export function command(g, id, cmd) {
         if (g.finalExit) {
           g.ended = true;
           g.phase = "finished";
-          g.scores = g.players.map((p) => p.savedCash + p.cash - p.debt - p.fees);
+          g.scores = g.players.map((p) => p.savedCash + p.cash - p.debt - p.fees - capitalPenalty(p));
           const max = Math.max(...g.scores);
           g.winners = g.players
             .filter((p) => g.scores[p.id] === max)
@@ -752,6 +746,15 @@ function startReveal(g){
   g.phase='reveal';g.queue=[];g.active=g.first;
   resolveRevealPhase(g,'start',true);checkRevealEnd(g);
 }
+function finishAction(g,id){
+  g.actionsLeft--;
+  if(g.actionsLeft>0){delete g.auction;g.phase='call';g.queue=[id];g.active=id;}
+  else nextAuction(g);
+}
+function replaceValue(g,id){
+  if(!g.intelDeck.length)g.intelDeck=shuffle(g,g.intelDiscard.splice(0));
+  if(g.intelDeck.length){g.players[id].intel.push(g.intelDeck.shift());g.metrics.intelDraws=(g.metrics.intelDraws??0)+1;}
+}
 function beginValueTurn(g,id){
   if(g.rules.intelMode==='off'){nextAuction(g);return;}
   g.intelOrder=[id];g.intelTiming='turn';delete g.valueResult;
@@ -761,7 +764,7 @@ function advanceIntel(g){
   const id=g.intelOrder?.[0]??g.active;
   if(g.valueResult&&!g.valueResult.shareholderReactionsDone){
     g.valueResult.shareholderReactionsDone=true;
-    const result=g.valueResult,targets=result.kind==='inside'?[]:[result.company,...(['move','swap','waste','headhunt'].includes(result.kind)?[result.target]:[])],actions=shareholderReactions(g,id,targets,result.heldCompanies);
+    const result=g.valueResult,targets=result.company<0?[]:[result.company,...(['move','swap','waste','headhunt','insurance','transfer','focused'].includes(result.kind)?[result.target]:[])],actions=shareholderReactions(g,id,targets,result.heldCompanies);
     if(actions.length){
       const log=g.lastRevealed?.stage==='intel'?g.lastRevealed.reactions??[]:[];
       resolveIntelActions(g,actions,{player:id,kind:g.valueResult.kind},{log});
@@ -770,8 +773,9 @@ function advanceIntel(g){
   }
   delete g.intelOrder;delete g.intelTiming;delete g.intelOptional;
   if(g.valueResult){
+    if(!g.liveDice){replaceValue(g,id);if(g.valueResult.kind==='fresh')replaceValue(g,id);}
     const result=g.valueResult;
-    result.after=g.companies.map(c=>({position:c.position,arrivalOrder:c.arrivalOrder,reserve:c.reserve,supply:c.supply.length,down:c.down,founder:c.founder,shares:holdings(c,result.player)}));
+    result.after=g.companies.map(c=>({position:c.position,arrivalOrder:c.arrivalOrder,supply:c.supply.length,down:c.down,founder:c.founder,shares:holdings(c,result.player)}));
     result.reactions=g.lastRevealed?.stage==='intel'?clone(g.lastRevealed.reactions??[]):[];
     result.noEffect=!!g.log.findLast(e=>e.type==='intelPlay'&&e.player===result.player)?.noEffect;
     g.lastRevealed={type:'valueResolved',value:clone(result),reactions:result.reactions};
@@ -779,14 +783,17 @@ function advanceIntel(g){
   }
   g.phase='valueResult';g.queue=[];g.active=id;
 }
-export function hasTurnAction(g,id){return true;} // Skipping the main action is always allowed.
+export function hasTurnAction(g,id){return canDrawEmptyHand(g,id) || g.players[id].capital<6 || eligibleCompanies(g,id).length>0 || g.companies.some(c=>holdings(c,id)>0) || (g.rules.intelMode!=='off' && g.players[id].intel.length>0);}
 export function observation(g, id) {
   const v = clone(g);
   v.playerId = id;
   v.discarded=g.removed.filter(card=>!card.burned).map(card=>clone(card));
   v.publicBurns=g.removed.filter(card=>card.burned&&card.public).map(card=>clone(card));
+  v.revealedDestroyed=(g.destroyed??[]).filter(t=>t.public).map(t=>clone(t));
   if(v.crisisChoice)v.crisisChoice={company:v.crisisChoice.company};
-  delete v.intelDeck;delete v.intelDiscard;
+  // Anya's unchosen discard options contain private card identities.
+  if(v.powerChoice?.founder===26&&v.powerChoice.player!==id)delete v.powerChoice.options;
+  delete v.intelDeck;delete v.intelDiscard;v.destroyedCounts=g.companies.map(c=>(g.destroyed??[]).filter(t=>t.company===c.id).length);delete v.destroyed;
   for(const c of v.companies)c.discardCount=g.removed.filter(x=>x.company===c.id&&!x.burned).length;
   for(const p of v.players){p.intelCount=p.intel.length;if(p.id!==id){delete p.intel;delete p.intelKnowledge;}}
   if(v.intelScout?.player!==id)delete v.intelScout;
@@ -830,6 +837,7 @@ export function assertGame(g) {
     ...g.companies.flatMap((c) => c.supply),
     ...g.pile.filter((c) => c.kind === "growth"),
     ...g.removed,
+    ...(g.destroyed??[]),
     ...(g.returningCards??[]),
     ...(g.race && !g.race.revealed && g.race.card.kind === "growth" ? [g.race.card] : []),
   ];
@@ -845,8 +853,8 @@ export function assertGame(g) {
     ...g.companies.map((c) => c.founder),
   ];
   check(
-    founders.length === FOUNDERS.length &&
-      new Set(founders).size === FOUNDERS.length &&
+    founders.length === ACTIVE_FOUNDERS.length &&
+      new Set(founders).size === ACTIVE_FOUNDERS.length && founders.every(id=>ACTIVE_FOUNDERS.includes(id)) &&
       g.founderMarket.length === 3,
     "Founder conservation failed.",
   );
@@ -854,7 +862,7 @@ export function assertGame(g) {
   for (const c of g.companies) {
     check(
       integer(c.position, 0, g.rules.checkpoints.at(-1)) &&
-        integer(c.purchased, 0, Number.MAX_SAFE_INTEGER) && integer(c.reserve,0,3) &&
+        integer(c.purchased, 0, Number.MAX_SAFE_INTEGER) &&
         c.supply.length + growth.filter(x=>x.company===c.id && !c.supply.some(y=>y.id===x.id)).length === growthDeck(c.id).length,
       "Invalid company stocks.",
     );
@@ -873,7 +881,7 @@ export function assertGame(g) {
       (p) =>
         [p.cash, p.locked, p.savedCash, p.debt, p.fees, p.obligation].every((n) =>
           money(n, 0, 1e9,g.rules),
-        ) && integer(p.lpObligations,0,1e9) && p.locked<=p.cash,
+        ) && integer(p.capital,0,6) && integer(p.lpObligations,0,1e9) && p.locked<=p.cash,
     ),
     "Invalid personal stocks.",
   );
@@ -900,4 +908,90 @@ export function replayGame(data) {
     assertGame(g);
   }
   return g;
+}
+
+// Ownership mutations invalidate temporary mandates, including changes that retain the natural lead.
+function retireShare(g,c,id){const index=c.tokens.findLastIndex(t=>t.owner===id);c.tokens.splice(index,1);c.tokens.forEach((t,i)=>t.id=i+1);delete c.mandate;if(!holdings(c,id))c.lastBuy[id]=0;}
+function issueFreeShare(g,c,id){delete c.mandate;c.tokens.push({id:c.tokens.length+1,owner:id,paid:0,boughtLeg:g.leg});c.lastBuy[id]=++g.serial;g.metrics.issued++;}
+export function cardCash(g,id,amount,detail={}){g.players[id].cash+=amount;if(amount>0)g.bank.issued+=amount;else g.bank.burn-=amount;emit(g,{type:'cardCash',player:id,amount,...detail});}
+function applyExpansion(g,id,card,cmd){
+ const p=g.players[id],c=g.companies[cmd.company],kind=card.kind;
+ if(g.diceRevision>=147&&['public','coup'].includes(kind)){applyDiceValue(g,id,card,cmd);return;}
+ if(g.diceRevision>=145&&['clearance','underwritten','weekend','matching','financing'].includes(kind)){applyDiceValue(g,id,card,cmd);return;}
+ let actions=[];
+ const move=(amount,company=cmd.company)=>({kind:'move',company,amount,intel:true});
+ const deploy=(count,company=cmd.company)=>({kind:'addSupply',company,count,intel:true});
+ if(kind==='clearance'){
+  const removed=Array.from({length:2},()=>c.supply.splice(Math.floor(random(g)*c.supply.length),1)[0]);
+  g.destroyed.push(...removed.map(t=>({...t,public:true})));cardCash(g,id,5);
+  g.valueResult.destroyedCards=clone(removed);emit(g,{type:'clearance',player:id,company:c.id,count:2,cards:removed});
+  for(const x of g.players)if(x.intelKnowledge?.company===c.id)delete x.intelKnowledge;
+ }
+ if(kind==='consolidation'){retireShare(g,c,id);p.capital--;if(g.diceRevision>=145)p.capitalCalled-=20;}
+ if(kind==='session'){const old=c.founder;c.founder=g.founderMarket[cmd.founder];(g.turnHires??=[]).push(c.id);g.founderSupply.push(old);g.founderMarket[cmd.founder]=g.founderSupply.shift();c.hiringFumble=true;g.metrics.founderSwaps++;emit(g,{type:'founder',company:c.id,old,founder:c.founder});actions=[{kind:'fumble',company:c.id}];}
+ if(kind==='insurance')actions=[{kind:'repair',company:c.id,source:c.id,intel:true},{kind:'fumble',company:cmd.target}];
+ if(kind==='weekend'){g.actionsLeft+=2;g.weekendUsed=true;}
+ if(FUNDRAISE_CARDS.includes(kind)){
+  g.auction={company:c.id,host:id,reserve:minimumBid(c,g.rules),bids:[],winner:null,paid:0,mode:kind,price:cmd.price??0};g.metrics.auctions++;g.cardFundraise=true;
+  if(kind==='rights'){g.phase='rights';g.queue=order(g,(id+1)%g.players.length).filter(x=>x!==id);}
+  else if(kind==='public'){g.phase='openBid';g.auction.contenders=order(g,id);g.auction.highBidder=null;g.queue=order(g,id);}
+  else {g.phase='bid';g.queue=order(g);}
+  return;
+ }
+ if(kind==='mandate'){cardCash(g,id,-2);c.mandate=id;}
+ if(kind==='coup'){c.mandate=id;actions=[{kind:'fumble',company:c.id}];}
+ if(kind==='matching'){cardCash(g,id,-3);actions=[deploy(2)];}
+ if(kind==='dividend'){for(const x of g.players){const amount=holdings(c,x.id)*(g.diceRevision>=145?2:3);if(amount)cardCash(g,x.id,amount);}actions=[move(-2)];}
+ if(kind==='stake'){
+  const previousLead=lead(c),price=[6,12,18][fundingBand(c.position)];p.cash-=price;g.players[cmd.seller].cash+=price;
+  delete c.mandate;c.tokens.find(t=>t.owner===cmd.seller).owner=id;c.lastBuy[id]=++g.serial;if(!holdings(c,cmd.seller))c.lastBuy[cmd.seller]=0;
+  emit(g,{type:'shareTransfer',player:id,seller:cmd.seller,company:c.id,amount:price});resolveSharePurchase(g,c.id,id,{previousLead});
+ }
+ if(kind==='focused'){const amount=g.diceRevision>=145?1:2;actions=[move(-amount),{kind:'move',company:cmd.target,amount,intel:true}];}
+ if(kind==='advice'){const index=cmd.discard-(cmd.discard>cmd.card?1:0);g.intelDiscard.push(p.intel.splice(index,1)[0]);cardCash(g,id,3);actions=[move(1)];}
+ if(kind==='sweat'){issueFreeShare(g,c,id);actions=[move(-2)];}
+ if(kind==='restructure'){p.capital--;if(g.diceRevision>=145)p.capitalCalled-=20;actions=[move(-3)];}
+ if(kind==='financing'){p.capital++;actions=[move(2),deploy(1)];}
+ if(kind==='fresh'){
+  const before=[...g.founderMarket];g.founderMarket=g.founderSupply.splice(0,g.diceRevision>=145?4:3);g.founderSupply.push(...before);
+  g.valueResult.marketBefore=before;g.valueResult.marketAfter=[...g.founderMarket];
+  emit(g,{type:'founderMarketRefresh',player:id,before,after:[...g.founderMarket]});
+ }
+ if(kind==='transfer'){retireShare(g,c,id);issueFreeShare(g,g.companies[cmd.target],id);}
+ if(actions.length)resolveIntelActions(g,actions,{player:id,kind});
+}
+
+function applyDiceValue(g,id,card,cmd){
+ const p=g.players[id],kind=card.kind,c=g.companies[cmd.company],actions=[];
+ const die=dieKind=>({kind:'valueDie',company:c.id,dieKind,player:id});
+ if(g.diceRevision>=147&&['public','coup'].includes(kind)){
+  check(g.dealRow[cmd.deal]?.company===c.id,'Choose a matching public deal-flow card.');
+  if(kind==='public')check(g.dealDeck.length>=2,'Two deal-flow cards must remain.');
+  const [spent]=g.dealRow.splice(cmd.deal,1);delete spent.bonusDice;g.dealSpent.push(spent);
+  if(kind==='public'){const drawn=[g.dealDeck.pop(),g.dealDeck.pop()];g.dealRow.push(...drawn);g.valueResult.dealChange={removed:c.id,added:drawn.map(d=>d.company)};}
+  else {c.mandate=id;g.valueResult.dealChange={removed:c.id};}
+ }
+ if(kind==='inside'){
+  const spent=g.dealSpent[cmd.spent],row=g.dealRow[cmd.deal];
+  check(spent?.company===c.id&&row&&holdings(g.companies[row.company],id)>0,'Choose two portfolio deal-flow cards.');
+  delete row.bonusDice;delete spent.bonusDice;g.dealSpent[cmd.spent]=row;g.dealRow[cmd.deal]=spent;
+  g.valueResult.dealChange={removed:row.company,added:spent.company};
+ }
+ if(kind==='advisor'){
+  check(g.dealSpent[cmd.spent]?.company===c.id,'Choose a matching spent card.');
+  const [returned]=g.dealSpent.splice(cmd.spent,1);delete returned.bonusDice;g.dealDeck.unshift(returned);
+  g.valueResult.dealChange={returned:c.id};actions.push({kind:'move',company:c.id,amount:1,intel:true});
+ }
+ if(kind==='clearance'){
+  check(g.dealDeck.length&&g.dealRow[cmd.deal]?.company===c.id,'Choose a matching row card.');
+  const old=g.dealRow[cmd.deal];delete old.bonusDice;g.dealSpent.push(old);const replacement=g.dealDeck.pop();g.dealRow[cmd.deal]=replacement;cardCash(g,id,5);
+  g.valueResult.dealChange={removed:c.id,added:replacement.company};
+ }
+ if(kind==='underwritten'){check(g.dealRow[cmd.deal]?.company===c.id,'Choose a matching row card.');g.dealRow[cmd.deal].bonusDice=(g.dealRow[cmd.deal].bonusDice??0)+1;g.valueResult.dealChange={bonus:c.id};}
+ if(kind==='weekend'){g.weekendUsed=true;g.extraSupport=2;}
+ if(kind==='matching'){cardCash(g,id,-3);actions.push(die('bland'));}
+ if(kind==='launch')actions.push(die('mild'));
+ if(kind==='smear')actions.push(die('mild'),{kind:'fumble',company:c.id});
+ if(kind==='financing'){p.capital++;p.capitalCalled+=20;actions.push({kind:'move',company:c.id,amount:2,intel:true},die('mild'));}
+ if(actions.length)resolveIntelActions(g,actions,{player:id,kind});
 }

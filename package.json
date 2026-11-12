@@ -1,6 +1,6 @@
 {
   "name": "vests",
-  "version": "97.0.0",
+  "version": "128.0.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -9,14 +9,21 @@
   "scripts": {
     "dev": "node server.js",
     "start": "node server.js",
-    "test": "node --test",
+    "test": "npm run test:current && npm run test:dice",
     "simulate": "node simulate.js",
     "balance": "node scripts/balance-study.js",
     "balance:report": "node scripts/money-report.js",
     "benchmark": "node scripts/benchmark.js",
     "native:build": "node scripts/build-native.js",
     "build:cloudflare": "node scripts/build-cloudflare.js",
-    "deploy": "wrangler deploy"
+    "deploy": "wrangler deploy",
+    "test:current": "node --test test/v98-rules.test.js test/v10*.test.js test/v11*.test.js test/v12*.test.js",
+    "simulate:dice": "node scripts/live-dice-simulate.js",
+    "study:dice": "node scripts/secret-investment-study.js",
+    "test:dice": "node --test test/deal-flow.test.js test/value-deck-v145.test.js test/full-founders-v147.test.js test/payout-comparison.test.js test/support-planner.test.js test/secret-investments.test.js test/finish-only.test.js",
+    "simulate:dice-live": "node scripts/live-dice-simulate.js",
+    "study:dice-live": "node scripts/secret-investment-study.js",
+    "study:public-flow": "node scripts/public-flow-study.js"
   },
   "devDependencies": {
     "wrangler": "^4.155.0"
