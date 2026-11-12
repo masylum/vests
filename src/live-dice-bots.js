@@ -90,7 +90,8 @@ export function diceBot(view,id,policy='balanced',options={}){
   const bid=policy==='random'?Math.floor(random()*(p.cash+1)):budget;
   return {type:view.phase,amount:bid>=min?bid:0};
  }
- const movement=(cid,amount)=>{const next=structuredClone(view);next.companies[cid].position=Math.max(0,Math.min(24,next.companies[cid].position+amount));return utility(next,id)-utility(view,id);};
+ const floor=view.diceRevision>=156?1:0;
+ const movement=(cid,amount)=>{const next=structuredClone(view);next.companies[cid].position=Math.max(floor,Math.min(24,next.companies[cid].position+amount));return utility(next,id)-utility(view,id);};
  const valueScores=new Map();
  const cardScore=cmd=>{const key=JSON.stringify(cmd);if(!valueScores.has(key))valueScores.set(key,scoreCard(cmd));return valueScores.get(key);};
  const scoreCard=cmd=>{
@@ -99,17 +100,18 @@ export function diceBot(view,id,policy='balanced',options={}){
   if(kind==='advisor')return movement(c.id,1)+Math.max(0,exposure(view,id,c))*.5;
   if(['launch','smear','matching'].includes(kind))return movement(c.id,c.down?0:1.2)-(kind==='matching'?3:0)-(kind==='smear'?Math.max(0,exposure(view,id,c))*.3:0);
   if(kind==='financing')return movement(c.id,3)-20;
-  if(kind==='clearance')return 5;
+  if(kind==='clearance')return view.diceRevision>=156?3:5;
   if(kind==='public')return 1;
   if(kind==='coup')return .5;
-  if(kind==='consolidation')return 20-worth(c);
+  if(kind==='consolidation')return 20-worth(c)-(view.diceRevision>=156?worth(view.companies[cmd.target]):0);
+  if(kind==='underwritten'&&view.diceRevision>=156)return [6,12,16][view.leg]-worth(c);
   if(kind==='restructure')return 20+movement(c.id,-3);
   if(kind==='recover')return movement(c.id,1)+(c.down?Math.max(0,exposure(view,id,c))*.7:0);
   if(kind==='move'){const next=structuredClone(view);for(const cid of [c.id,...(cmd.target==null?[]:[cmd.target])])next.companies[cid].position=Math.min(24,next.companies[cid].position+1);return utility(next,id)-utility(view,id);}
   if(kind==='conflict')return movement(c.id,-2);
-  if(kind==='dividend'){const next=structuredClone(view);for(const player of next.players)player.cash=(player.cash??20)+2*holdings(c,player.id);next.companies[c.id].position=Math.max(0,c.position-2);return utility(next,id)-utility(view,id);}
-  if(kind==='sweat'){const next=structuredClone(view);next.companies[c.id].position=Math.max(0,c.position-2);next.companies[c.id].tokens.push({owner:id});return utility(next,id)-utility(view,id);}
-  if(kind==='focused'){const next=structuredClone(view);next.companies[c.id].position=Math.max(0,c.position-1);next.companies[cmd.target].position=Math.min(24,next.companies[cmd.target].position+1);return utility(next,id)-utility(view,id);}
+  if(kind==='dividend'){const next=structuredClone(view);for(const player of next.players)player.cash=(player.cash??20)+(view.diceRevision>=156?3:2)*holdings(c,player.id);next.companies[c.id].position=Math.max(floor,c.position-2);return utility(next,id)-utility(view,id);}
+  if(kind==='sweat'){const next=structuredClone(view);next.companies[c.id].position=Math.max(floor,c.position-2);next.companies[c.id].tokens.push({owner:id});return utility(next,id)-utility(view,id);}
+  if(kind==='focused'){const next=structuredClone(view);next.companies[c.id].position=Math.max(floor,c.position-1);next.companies[cmd.target].position=Math.min(24,next.companies[cmd.target].position+1);return utility(next,id)-utility(view,id);}
   if(kind==='swap')return movement(c.id,view.companies[cmd.target].position-c.position)+movement(cmd.target,c.position-view.companies[cmd.target].position);
   if(kind==='insurance')return Math.max(0,exposure(view,id,c))*.7-Math.max(0,exposure(view,id,view.companies[cmd.target]))*.7;
   if(['rights','public','tender'].includes(kind))return 1;

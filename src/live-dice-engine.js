@@ -15,26 +15,28 @@ export const DICE_VALUES=Object.keys(BASE_INTEL_CARDS);
 
 const INTEL_CARDS={...BASE_INTEL_CARDS,sweat:{...BASE_INTEL_CARDS.sweat,text:'Move a portfolio company back 2 spaces and add 1 of your shares to it. No dice.'},...Object.fromEntries(['rights','public','tender'].map(k=>[k,{...BASE_INTEL_CARDS[k],text:({rights:'Spend matching deal-flow. Offer 1 new portfolio share at $1+ you can pay. Clockwise, first acceptance buys; if all pass, you buy.',public:'Spend matching deal-flow. Auction 1 new portfolio share from $1. Raise $1+; passing is final. Highest bidder pays.',tender:'Spend matching deal-flow. Auction 1 new portfolio share. Everyone bids secretly once; highest bidder pays their offer. Normal ties.'})[k]}]))};
 Object.assign(INTEL_CARDS,Object.fromEntries(Object.entries({
- coup:'Discard a public deal-flow card of a portfolio company you do not lead. Become its lead investor until its next ownership change.',
+ coup:'Discard a public deal-flow card of a portfolio company. Become its lead investor until its next ownership change.',
  inside:'Swap a spent deal-flow card with a card in the public row. Both must be portfolio companies.',
  launch:'Roll one mild die for a portfolio company with a card in the public row.',
- smear:'Roll one mild die for a portfolio company, then fumble it.',
- advisor:'Return one spent deal-flow card of a portfolio company to the bottom of the deck, then move it 1 space.',
- clearance:'Discard a portfolio company’s card from the public row and draw a new one. Gain $5.',
- weekend:'Take 2 support actions after this card, before fundraising. At most once per turn.',
- underwritten:'Add one bland die to a portfolio company’s card in the public row. It rolls when that card is funded.',
+ smear:'Roll 2 mild dice for a portfolio company, then fumble it.',
+ advisor:'Return one spent deal-flow card of a portfolio company to the top of the deck, then move that company forward 1 space.',
+ clearance:'Discard a portfolio company’s card from the public row and draw a new one. Gain $3.',
+ weekend:'Take 2 support actions after playing this card. At most once per turn.',
+ underwritten:'Return 1 share you own in a portfolio company. Gain $6 / $12 / $16 in leg 1 / 2 / 3.',
  matching:'Pay $3 to roll one bland die for a portfolio company. No new share.',
- dividend:'Move a portfolio company back 2 spaces. Its shareholders gain $2 per share.',
+ dividend:'Move a portfolio company back 2 spaces. Its shareholders gain $3 per share.',
  focused:'Choose 2 portfolio companies. Move one back 1 space, then the other forward 1 space.',
  financing:'Increase your called capital by $20. Move a portfolio company 2 spaces, then roll one mild die. Gain no cash.',
  fresh:'Replace all 4 public founders. Draw 2 value cards instead of your normal replacement.',
- consolidation:'Return 1 of your portfolio shares. Reduce your called capital by $20.',
+ consolidation:'Return 2 shares you own, from one or two portfolio companies. Reduce your called capital by $20.',
  restructure:'Move a portfolio company back 3 spaces. Reduce your called capital by $20.',
  rights:'Offer 1 new portfolio share at $1+ you can pay. First clockwise acceptance buys; if all pass, you buy. No dice.',
  public:'Discard a portfolio company’s card from the public deal-flow row. Draw 2 new deal-flow cards into the row.',
  tender:'Auction 1 new portfolio share. Everyone bids secretly once; highest bidder pays their offer. No dice.'
 }).map(([kind,text])=>[kind,{...BASE_INTEL_CARDS[kind],text}])));
-const founderOverrides={24:'When a company sharing my space moves, I move 1.',9:'Once per reveal, when another company fumbles, I may recover it and roll one bland die for my company.',14:'Before the reveal, I roll one mild die.',16:'Once per reveal, I may pay $2 to redirect a revealed die to my company.',21:'Once per reveal, return a spent deal-flow card to the top of the deck, then move that company back 2.'};
+INTEL_CARDS.advice={...INTEL_CARDS.advice,name:'Wasteful Advice'};
+INTEL_CARDS.restructure={...INTEL_CARDS.restructure,name:'Illicit Capital'};
+const founderOverrides={24:'When a company sharing my space moves, I move with it.',4:'At game end, if I finish second to last, my company may exit for $16 per share.',8:'When I move forward, I move 1 extra space unless I am leading.',10:'Once per reveal, when another company lands on my space, that company fumbles and I move 1 space.',9:'Once per reveal, when another company fumbles, I may recover it and roll one bland die for my company.',14:'Before the reveal, I roll one mild die.',16:'Once per reveal, I may pay $1 to redirect a revealed die to my company.',21:'Once per reveal, return a spent deal-flow card to the top of the deck, then move that company back 2.'};
 const founderCopy=text=>text.replace(/numbered growth (?:token|card) is revealed/gi,'dice reveal has numbers').replace(/growth (?:token|card) is revealed/gi,'dice are revealed');
 const FOUNDERS=BASE_FOUNDERS.map(f=>{if(founderOverrides[BASE_FOUNDERS.indexOf(f)])return {...f,trigger:'',action:founderOverrides[BASE_FOUNDERS.indexOf(f)],text:founderOverrides[BASE_FOUNDERS.indexOf(f)]};const trigger=founderCopy(f.trigger),action=founderCopy(f.action);if(f.id===11||BASE_FOUNDERS.indexOf(f)===11)return {...f,trigger,action:action.replace('2','1'),text:`${trigger}: ${action.replace('2','1')}`};return {...f,trigger,action,text:`${trigger}: ${action}`};});
 
@@ -44,7 +46,8 @@ function resetWindow(g){
 function dealRow(g){
  g.dealRow=[];
  for(let i=0;i<(g.rowSize??g.companies.length-1)&&g.dealDeck.length;i++){
-  const index=g.distinctRow?g.dealDeck.findIndex(c=>!g.dealRow.some(d=>d.company===c.company)):g.dealDeck.length-1;
+  const available=c=>!g.dealRow.some(d=>d.company===c.company);
+  const index=!g.distinctRow?g.dealDeck.length-1:g.diceRevision>=156?g.dealDeck.findLastIndex(available):g.dealDeck.findIndex(available);
   if(index<0)break;g.dealRow.push(g.dealDeck.splice(index,1)[0]);
  }
  event(g,{type:'dealFlowRow',cards:g.dealRow,remaining:g.dealDeck.length});
@@ -110,7 +113,10 @@ function advanceAction(g){
  const pending=g.pendingGrowth.find(e=>!e.resolved&&!e.dice);
  if(pending){turn(g,'chooseDice',pending.player);return;}
  if(g.turnPart==='support'&&g.extraSupport>0){g.extraSupport--;turn(g,'flowAction',g.flowActor);return;}
- if(g.turnPart==='support'&&g.dealRow.length){g.turnPart='funding';turn(g,'pickFlow',g.flowActor);return;}
+ if(g.diceRevision>=156&&g.turnPart==='funding'){
+  g.turnPart='support';turn(g,'flowAction',g.flowActor);return;
+ }
+ if(g.diceRevision<156&&g.turnPart==='support'&&g.dealRow.length){g.turnPart='funding';turn(g,'pickFlow',g.flowActor);return;}
  g.roundActed.push(g.flowActor);g.turnNumber++;nextTurn(g);
 }
 function resetRound(g){
@@ -133,7 +139,8 @@ function newRound(g){
 function nextTurn(g){
  delete g.auction;delete g.valueResult;delete g.intelOrder;
  if(g.roundActed.length===g.players.length){bankRemainder(g);startReveal(g);return;}
- g.extraSupport=0;g.weekendUsed=false;g.flowStage='action';g.turnPart='support';turn(g,'flowAction',(g.flowActor+1)%g.players.length);
+ g.extraSupport=0;g.weekendUsed=false;g.flowStage='action';const fundingFirst=g.diceRevision>=156&&g.dealRow.length;
+ g.turnPart=fundingFirst?'funding':'support';turn(g,fundingFirst?'pickFlow':'flowAction',(g.flowActor+1)%g.players.length);
 }
 
 function apply(g,id,cmd){
@@ -174,7 +181,7 @@ export function diceObservation(g,id){
  for(const p of view.players){p.dealFlowCount=p.dealFlow.length;if(p.id!==id){delete p.dealFlow;if(!g.ended){delete p.cash;delete p.capital;delete p.capitalCalled;delete p.secretBonus;}}}
  if(!g.ended){delete view.bank;view.log=[];}return view;
 }
-export function replayDiceGame(data){check(data.version===LIVE_DICE_VERSION,'Load this replay in its original dice version.');const g=createDiceGame(data.setup);for(const {id,cmd} of data.commands)diceCommand(g,id,cmd);return g;}
+export function replayDiceGame(data){check([LIVE_DICE_VERSION,'155-five-card-flow'].includes(data.version),'Load this replay in its original dice version.');const g=createDiceGame({...data.setup,revision:data.version===LIVE_DICE_VERSION?156:155});for(const {id,cmd} of data.commands)diceCommand(g,id,cmd);return g;}
 export {currentPlayer,pendingFor,holdings,shareLeader,exitPrice,shareExitPrice,FOUNDERS,INTEL_CARDS};
 
 // Rounds count one completed turn per player; legs are independent position gates.
@@ -229,9 +236,10 @@ function playLegacy(g,id,cmd){
  }else legacyCommand(g,id,cmd);
 }
 export function valueChoices(g,id){return previousChoices(g,id);}
-export function createDiceGame({seed=42,players=4,dealCopies=DEAL_COPIES,bankDice=2,distinctRow=false,payoutMode='perShare',perShareMax=20,exitCurve='early5',initialCapital=20,secretBonuses=true,daniloStep=true,rowSize=5,roundLimit=null,endOnDeckExhaustion=true}={}){
+export function createDiceGame({seed=42,players=4,dealCopies=DEAL_COPIES,bankDice=2,distinctRow=false,payoutMode='perShare',perShareMax=20,exitCurve='early5',initialCapital=20,secretBonuses=true,revision=156,daniloStep=revision===155,rowSize=5,roundLimit=null,endOnDeckExhaustion=true}={}){
  check(Number.isInteger(dealCopies)&&dealCopies>=1&&dealCopies<=100,'Choose 1–100 cards per company.');
  check(['dilution','perShare'].includes(payoutMode),'Choose dilution or per-share payouts.');
+ check([155,156].includes(revision),'Unknown Dice rules revision.');
  const g=createGame({seed,players,variant:'dice'});g.payoutMode=payoutMode;check([20,21,24].includes(perShareMax),'Choose a $20, $21 or $24 last-space payout.');g.perShareMax=exitCurve==='early5'?20:exitCurve==='early4'?21:perShareMax;
  check(['late','early4','early5'].includes(exitCurve),'Unknown exit curve.');check([0,20].includes(initialCapital),'Initial capital must be $0 or $20.');g.exitCurve=exitCurve;g.initialCapital=initialCapital;g.secretBonuses=!!secretBonuses;g.daniloStep=!!daniloStep;
  check(rowSize===null||Number.isInteger(rowSize)&&rowSize>=players&&rowSize<=12,'Invalid public row size.');check(roundLimit===null||Number.isInteger(roundLimit)&&roundLimit>0,'Invalid round limit.');g.rowSize=rowSize??players+1;g.roundLimit=roundLimit;g.endOnDeckExhaustion=!!endOnDeckExhaustion;
@@ -244,7 +252,7 @@ export function createDiceGame({seed=42,players=4,dealCopies=DEAL_COPIES,bankDic
  for(const p of g.players){p.dealFlow=[];p.actionsTaken=0;p.capital=initialCapital/20;p.capitalCalled=initialCapital;}
  turn(g,'flowRoll');
  check([1,2].includes(bankDice),'Bank rolls one or two dice.');g.bankDice=bankDice;g.distinctRow=!!distinctRow;g.publicFlow=true;g.dealRow=[];g.dealCopies=dealCopies;g.dealDeck=[];g.dealSpent=[];
- g.rules.catchUp=true;g.liveDice=true;g.roundDice=false;g.sharedReveal=true;g.roundFunded=[];g.roundActed=[];g.turnNumber=0;g.publicValues=false;g.diceRevision=155;g.version=LIVE_DICE_VERSION;g.flowStage='setup';g.leg=0;g.crossedLegs=[];g.dealSerial=0;g.actionsPerRound=null;
+ g.rules.catchUp=true;g.liveDice=true;g.roundDice=false;g.sharedReveal=true;g.roundFunded=[];g.roundActed=[];g.turnNumber=0;g.publicValues=false;g.diceRevision=revision;g.version=revision===155?'155-five-card-flow':LIVE_DICE_VERSION;g.flowStage='setup';g.leg=0;g.crossedLegs=[];g.dealSerial=0;g.actionsPerRound=null;
  const founders=shuffle(g,[...DICE_FOUNDERS]);for(const c of g.companies)c.founder=founders.shift();
  g.founderMarket=founders.splice(0,4);g.founderSupply=founders;
  g.intelDeck=shuffle(g,intelDeck().filter((c,i,a)=>DICE_VALUES.includes(c.kind)&&a.findIndex(x=>x.kind===c.kind)===i));g.intelDiscard=[];g.valueDeckSize=g.intelDeck.length;g.valueMarket=[];
@@ -277,7 +285,7 @@ export function assertDiceGame(g){
  if(g.secretBonuses){const cards=g.players.map(p=>p.secretBonus);check(cards.every(c=>c&&c.plus5===c.id&&c.plus3===(c.id+1)%g.companies.length&&c.id>=0&&c.id<g.companies.length)&&new Set(cards.map(c=>c.id)).size===cards.length,'Invalid secret investments.');}
  check(g.players.every(p=>Number.isInteger(p.cash)&&p.cash>=0&&p.capitalCalled===p.capital*20),'Invalid cash/capital.');
  check(g.players.reduce((n,p)=>n+p.cash,0)===g.bank.issued-g.bank.burn,'Cash conservation failed.');
- check(g.companies.every(c=>c.position>=0&&c.position<=24&&c.tokens.every(t=>g.players[t.owner])),'Invalid company.');
+ check(g.companies.every(c=>c.position>=(g.diceRevision>=156?1:0)&&c.position<=24&&c.tokens.every(t=>g.players[t.owner])),'Invalid company.');
  const founders=[...g.companies.map(c=>c.founder),...g.founderMarket,...g.founderSupply];
  check(g.founderMarket.length===4&&founders.length===DICE_FOUNDERS.length&&new Set(founders).size===founders.length&&founders.every(f=>DICE_FOUNDERS.includes(f)),'Founder conservation failed.');
  const values=[...g.intelDeck,...g.intelDiscard,...g.valueMarket,...g.players.flatMap(p=>p.intel)];

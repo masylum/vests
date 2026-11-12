@@ -97,21 +97,22 @@ export function expansionTargets(g,id,kind){
  if(kind==='weekend')return !g.weekendUsed?[-1]:[];
  if(kind==='fresh')return g.players.reduce((n,x)=>n+(x.intelCount??x.intel.length),0)<(g.valueDeckSize??60)?[-1]:[];
  return g.companies.filter(c=>shareCount(c,id)>0).filter(c=>{
-  if(g.diceRevision>=147&&['public','coup'].includes(kind))return g.dealRow.some(d=>d.company===c.id)&&(kind==='public'?(g.dealDeckCount??g.dealDeck?.length??0)>=2:shareLeader(c)!==id);
+  if(g.diceRevision>=147&&['public','coup'].includes(kind))return g.dealRow.some(d=>d.company===c.id)&&(kind==='public'?(g.dealDeckCount??g.dealDeck?.length??0)>=2:g.diceRevision>=156||shareLeader(c)!==id);
   if(kind==='clearance')return g.diceRevision>=145?g.dealDeckCount>0&&g.dealRow.some(d=>d.company===c.id)||g.dealDeck?.length>0&&g.dealRow.some(d=>d.company===c.id):supply(c)>=2;
-  if(kind==='consolidation')return p.capital>0;
+  if(kind==='consolidation')return p.capital>0&&(!(g.diceRevision>=156)||g.companies.reduce((n,x)=>n+shareCount(x,id),0)>=2);
   if(kind==='session')return g.founderMarket.length>0;
   if(kind==='insurance')return (c.down||c.hiringFumble)&&expansionSeconds(g,id,kind,c.id).length>0;
+  if(g.diceRevision>=156&&kind==='underwritten')return true;
   if(g.diceRevision>=145&&kind==='underwritten')return g.dealRow.some(d=>d.company===c.id);
   if(FUNDRAISE_CARDS.includes(kind))return (g.variant==='dice'||supply(c)>0)&&c.tokens.length<g.rules.shareLimit&&(kind!=='rights'||cash>=minimumBid(c,g.rules));
   if(kind==='mandate')return cash>=2&&shareLeader(c)!==id;
   if(kind==='coup')return shareLeader(c)!==id;
   if(kind==='matching')return cash>=3&&(g.diceRevision>=145||supply(c)>=2);
-  if(['dividend','sweat'].includes(kind))return c.position>=2&&(kind!=='sweat'||c.tokens.length<g.rules.shareLimit);
-  if(kind==='stake')return cash>=[6,12,18][fundingBand(c.position)]&&c.tokens.some(t=>t.owner!==null&&t.owner!==id);
+  if(['dividend','sweat'].includes(kind))return c.position>=(g.diceRevision>=156?1:2)&&(kind!=='sweat'||c.tokens.length<g.rules.shareLimit);
+  if(kind==='stake')return cash>=[6,12,18][g.diceRevision>=156?g.leg:fundingBand(c.position)]&&c.tokens.some(t=>t.owner!==null&&t.owner!==id);
   if(kind==='focused')return c.position>=(g.diceRevision>=145?1:2)&&expansionSeconds(g,id,kind,c.id).length>0;
   if(kind==='advice')return c.position<24&&p.intel.length>=2;
-  if(kind==='restructure')return c.position>=3&&p.capital>0;
+  if(kind==='restructure')return c.position>=(g.diceRevision>=156?1:3)&&p.capital>0;
   if(kind==='financing')return p.capital<6&&(g.diceRevision>=145||supply(c)>=1);
   if(kind==='transfer')return expansionSeconds(g,id,kind,c.id).length>0;
   return false;
@@ -120,6 +121,7 @@ export function expansionTargets(g,id,kind){
 // Finite choices shared by UI, bot and audit traces. Rights prices are validated separately.
 export function expansionChoices(g,id,card,cid){
  const kind=g.players[id].intel[card].kind,c=g.companies[cid];
+ if(g.diceRevision>=156&&kind==='underwritten')return [{}];
  if(g.diceRevision>=147&&['public','coup'].includes(kind))return g.dealRow.flatMap((d,deal)=>d.company===cid?[{deal}]:[]);
  if(g.diceRevision>=145){
   if(kind==='inside')return g.dealSpent.flatMap((d,spent)=>d.company!==cid?[]:g.dealRow.flatMap((r,deal)=>shareCount(g.companies[r.company],id)>0?[{spent,deal}]:[]));

@@ -37,12 +37,14 @@ function positionValue(g,id,cid,policy){
 function valueScore(g,id,cmd,policy){
  const kind=(g.publicValues?g.valueMarket:g.players[id].intel)[cmd.card].kind,c=g.companies[cmd.company],own=c?holdings(c,id):0;
  const delta=(cid,n)=>{const x=g.companies[cid];return (exitPrice(Math.min(24,x.position+n+4))-exitPrice(Math.min(24,x.position+4)))*(holdings(x,id)-.3*(x.tokens.length-holdings(x,id)));};
- if(['rights','public','tender'].includes(kind))return positionValue(g,id,c.id,policy)*.55;
+ if(['rights','tender'].includes(kind))return positionValue(g,id,c.id,policy)*.55;
  if(kind==='sweat')return roughPrice(g,id,c.id)+delta(c.id,-2);
  if(kind==='focused')return delta(c.id,-1)+delta(cmd.target,1);
  if(kind==='move')return delta(c.id,1)+(cmd.target==null?0:delta(cmd.target,1));
  if(kind==='recover')return delta(c.id,1)+(c.down?own*3:0);
- if(kind==='dividend')return own*2+delta(c.id,-2);
+ if(kind==='dividend')return own*(g.diceRevision>=156?3:2)+delta(c.id,-2);
+ if(kind==='underwritten'&&g.diceRevision>=156)return [6,12,16][g.leg]-roughPrice(g,id,c.id,{purchase:false});
+ if(kind==='consolidation'&&g.diceRevision>=156)return 20-roughPrice(g,id,c.id,{purchase:false})-roughPrice(g,id,cmd.target,{purchase:false});
  if(kind==='conflict')return delta(c.id,-2);
  if(kind==='swap')return delta(c.id,g.companies[cmd.target].position-c.position)+delta(cmd.target,c.position-g.companies[cmd.target].position);
  if(kind==='insurance')return 2*(own-holdings(g.companies[cmd.target],id));

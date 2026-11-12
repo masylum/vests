@@ -1,5 +1,5 @@
 import {companyValue,raceRank} from './config.js';
-export const LIVE_DICE_VERSION = '155-five-card-flow';
+export const LIVE_DICE_VERSION = '156-fundraise-first';
 export const DICE = Object.freeze({
   bland: Object.freeze([0, 1, 1, 1, 2, 2]),
   mild: Object.freeze(['x', 0, 1, 2, 2, 3]),
@@ -35,7 +35,8 @@ export function trackExitPrice(g,position){
  return g.payoutMode==='perShare'?Math.round(PER_SHARE_EXITS[Math.max(0,Math.min(24,Math.floor(position)))]*(g.perShareMax??24)/24):exitPrice(position);}
 export function projectedSharePrice(g,c,position=c.position,shares=c.tokens.length){
  const ordinary=g.payoutMode==='perShare'?trackExitPrice(g,position):Math.floor(exitPrice(position)/Math.max(1,shares));
- const special=c.founder===4&&!c.down&&!c.hiringFumble&&raceRank(c,g.companies)===g.companies.length-1?Math.floor(75/Math.max(1,shares)):0;
+ const secondLast=c.founder===4&&!c.down&&!c.hiringFumble&&raceRank(c,g.companies)===g.companies.length-1;
+ const special=secondLast?(g.diceRevision>=156&&g.payoutMode==='perShare'?16:Math.floor(75/Math.max(1,shares))):0;
  return Math.max(ordinary,special);
 }
 

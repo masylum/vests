@@ -76,6 +76,7 @@ export function discardValue(g,id,card){
  return movement*(own-.3*(1-own));
 }
 export function intelSecondTargets(g,id,kind,cid){
+ if(g.diceRevision>=156&&kind==='consolidation')return invested(g,id).filter(c=>c.id!==cid||c.tokens.filter(t=>t.owner===id).length>=2).map(c=>c.id);
  if(['insurance','transfer','focused'].includes(kind))return expansionSeconds(g,id,kind,cid);
  if(kind==='headhunt')return invested(g,id).filter(c=>c.id!==cid).map(c=>c.id);
  if(kind==='move')return intelTargets(g,id,kind).filter(x=>x!==cid);

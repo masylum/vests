@@ -1,7 +1,7 @@
 import {createDiceGame,diceCommand,diceObservation,currentPlayer,replayDiceGame} from '../src/live-dice-engine.js';
 import {diceBot,diceEvaluations,DICE_BOT_VERSION} from '../src/live-dice-bots.js';
 import {pathToFileURL} from 'node:url';
-export function simulateLiveDice({seed=42,players=4,policies=['balanced'],dicePolicy='adaptive',trace=false,payoutMode='perShare',perShareMax=20,exitCurve='early5',initialCapital=20,secretBonuses=true,daniloStep=true,supportPolicy='planner',dealCopies,capitalRoundLimit=Infinity,maxRoundsSafety=Infinity,rowSize=5,roundLimit=null,endOnDeckExhaustion=true,maxDecisions=2000}={}){
+export function simulateLiveDice({seed=42,players=4,policies=['balanced'],dicePolicy='adaptive',trace=false,payoutMode='perShare',perShareMax=20,exitCurve='early5',initialCapital=20,secretBonuses=true,daniloStep,supportPolicy='planner',dealCopies,capitalRoundLimit=Infinity,maxRoundsSafety=Infinity,rowSize=5,roundLimit=null,endOnDeckExhaustion=true,maxDecisions=2000}={}){
  const setup={seed,players,rowSize,roundLimit,endOnDeckExhaustion,payoutMode,perShareMax,exitCurve,initialCapital,secretBonuses,daniloStep,...(dealCopies===undefined?{}:{dealCopies})},g=createDiceGame(setup),commands=[],decisions=[];let meaningful=0,steps=0,capitalStreak=0;
  for(let step=0;!g.ended&&!g.stalled&&step<maxDecisions;step++){
   if(g.round>maxRoundsSafety){g.cutoff=`Study safety stop after ${maxRoundsSafety} rounds`;break;}

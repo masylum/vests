@@ -305,7 +305,7 @@ export function resolveCardBase(g, card) {
   if (card.kind === "growth" && card.effect) {
     const c = g.companies[card.company];
     const issued = 0;
-    if (card.effect === "setback") c.position = Math.max(0,c.position-1);
+    if (card.effect === "setback") c.position = Math.max(g.diceRevision>=156?1:0,c.position-1);
     g.metrics.setbacks = (g.metrics.setbacks ?? 0) + Number(card.effect === "setback");
     event.effect = {company:c.id, before:positions[c.id], after:c.position, risk:card.effect, issued};
     owner.history.push(g.forecast?physical:clone(physical));
@@ -913,7 +913,9 @@ export function replayGame(data) {
 // Ownership mutations invalidate temporary mandates, including changes that retain the natural lead.
 function retireShare(g,c,id){const index=c.tokens.findLastIndex(t=>t.owner===id);c.tokens.splice(index,1);c.tokens.forEach((t,i)=>t.id=i+1);delete c.mandate;if(!holdings(c,id))c.lastBuy[id]=0;}
 function issueFreeShare(g,c,id){delete c.mandate;c.tokens.push({id:c.tokens.length+1,owner:id,paid:0,boughtLeg:g.leg});c.lastBuy[id]=++g.serial;g.metrics.issued++;}
-export function cardCash(g,id,amount,detail={}){g.players[id].cash+=amount;if(amount>0)g.bank.issued+=amount;else g.bank.burn-=amount;emit(g,{type:'cardCash',player:id,amount,...detail});}
+export function cardCash(g,id,amount,detail={}){
+ if(g.diceRevision>=156&&g.intelOrder?.[0]===id&&g.valueResult?.player===id)g.valueResult.cashChange=(g.valueResult.cashChange??0)+amount;
+ g.players[id].cash+=amount;if(amount>0)g.bank.issued+=amount;else g.bank.burn-=amount;emit(g,{type:'cardCash',player:id,amount,...detail});}
 function applyExpansion(g,id,card,cmd){
  const p=g.players[id],c=g.companies[cmd.company],kind=card.kind;
  if(g.diceRevision>=147&&['public','coup'].includes(kind)){applyDiceValue(g,id,card,cmd);return;}
@@ -927,7 +929,7 @@ function applyExpansion(g,id,card,cmd){
   g.valueResult.destroyedCards=clone(removed);emit(g,{type:'clearance',player:id,company:c.id,count:2,cards:removed});
   for(const x of g.players)if(x.intelKnowledge?.company===c.id)delete x.intelKnowledge;
  }
- if(kind==='consolidation'){retireShare(g,c,id);p.capital--;if(g.diceRevision>=145)p.capitalCalled-=20;}
+ if(kind==='consolidation'){retireShare(g,c,id);if(g.diceRevision>=156)retireShare(g,g.companies[cmd.target],id);p.capital--;if(g.diceRevision>=145)p.capitalCalled-=20;}
  if(kind==='session'){const old=c.founder;c.founder=g.founderMarket[cmd.founder];(g.turnHires??=[]).push(c.id);g.founderSupply.push(old);g.founderMarket[cmd.founder]=g.founderSupply.shift();c.hiringFumble=true;g.metrics.founderSwaps++;emit(g,{type:'founder',company:c.id,old,founder:c.founder});actions=[{kind:'fumble',company:c.id}];}
  if(kind==='insurance')actions=[{kind:'repair',company:c.id,source:c.id,intel:true},{kind:'fumble',company:cmd.target}];
  if(kind==='weekend'){g.actionsLeft+=2;g.weekendUsed=true;}
@@ -941,9 +943,9 @@ function applyExpansion(g,id,card,cmd){
  if(kind==='mandate'){cardCash(g,id,-2);c.mandate=id;}
  if(kind==='coup'){c.mandate=id;actions=[{kind:'fumble',company:c.id}];}
  if(kind==='matching'){cardCash(g,id,-3);actions=[deploy(2)];}
- if(kind==='dividend'){for(const x of g.players){const amount=holdings(c,x.id)*(g.diceRevision>=145?2:3);if(amount)cardCash(g,x.id,amount);}actions=[move(-2)];}
+ if(kind==='dividend'){for(const x of g.players){const amount=holdings(c,x.id)*(g.diceRevision>=145&&g.diceRevision<156?2:3);if(amount)cardCash(g,x.id,amount);}actions=[move(-2)];}
  if(kind==='stake'){
-  const previousLead=lead(c),price=[6,12,18][fundingBand(c.position)];p.cash-=price;g.players[cmd.seller].cash+=price;
+  const previousLead=lead(c),price=[6,12,18][g.diceRevision>=156?g.leg:fundingBand(c.position)];p.cash-=price;g.players[cmd.seller].cash+=price;
   delete c.mandate;c.tokens.find(t=>t.owner===cmd.seller).owner=id;c.lastBuy[id]=++g.serial;if(!holdings(c,cmd.seller))c.lastBuy[cmd.seller]=0;
   emit(g,{type:'shareTransfer',player:id,seller:cmd.seller,company:c.id,amount:price});resolveSharePurchase(g,c.id,id,{previousLead});
  }
@@ -979,19 +981,22 @@ function applyDiceValue(g,id,card,cmd){
  }
  if(kind==='advisor'){
   check(g.dealSpent[cmd.spent]?.company===c.id,'Choose a matching spent card.');
-  const [returned]=g.dealSpent.splice(cmd.spent,1);delete returned.bonusDice;g.dealDeck.unshift(returned);
+  const [returned]=g.dealSpent.splice(cmd.spent,1);delete returned.bonusDice;if(g.diceRevision>=156)g.dealDeck.push(returned);else g.dealDeck.unshift(returned);
   g.valueResult.dealChange={returned:c.id};actions.push({kind:'move',company:c.id,amount:1,intel:true});
  }
  if(kind==='clearance'){
   check(g.dealDeck.length&&g.dealRow[cmd.deal]?.company===c.id,'Choose a matching row card.');
-  const old=g.dealRow[cmd.deal];delete old.bonusDice;g.dealSpent.push(old);const replacement=g.dealDeck.pop();g.dealRow[cmd.deal]=replacement;cardCash(g,id,5);
+  const old=g.dealRow[cmd.deal];delete old.bonusDice;g.dealSpent.push(old);const replacement=g.dealDeck.pop();g.dealRow[cmd.deal]=replacement;cardCash(g,id,g.diceRevision>=156?3:5);
   g.valueResult.dealChange={removed:c.id,added:replacement.company};
+ }
+ if(kind==='underwritten'&&g.diceRevision>=156){
+  retireShare(g,c,id);cardCash(g,id,[6,12,16][g.leg]);return;
  }
  if(kind==='underwritten'){check(g.dealRow[cmd.deal]?.company===c.id,'Choose a matching row card.');g.dealRow[cmd.deal].bonusDice=(g.dealRow[cmd.deal].bonusDice??0)+1;g.valueResult.dealChange={bonus:c.id};}
  if(kind==='weekend'){g.weekendUsed=true;g.extraSupport=2;}
  if(kind==='matching'){cardCash(g,id,-3);actions.push(die('bland'));}
  if(kind==='launch')actions.push(die('mild'));
- if(kind==='smear')actions.push(die('mild'),{kind:'fumble',company:c.id});
+ if(kind==='smear')actions.push(...Array.from({length:g.diceRevision>=156?2:1},()=>die('mild')),{kind:'fumble',company:c.id});
  if(kind==='financing'){p.capital++;p.capitalCalled+=20;actions.push({kind:'move',company:c.id,amount:2,intel:true},die('mild'));}
  if(actions.length)resolveIntelActions(g,actions,{player:id,kind});
 }

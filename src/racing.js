@@ -58,7 +58,7 @@ function reactions(g,moves) {
     switch(c.founder) {
       case 0: if(landed&&duringRevealRound(g)&&!g.stefanUsed?.includes(cid))trigger={power:'jobs'};break;
 
-      case 10: for(const m of other.filter(m=>m.before<=c.position&&m.after>c.position))steps.push({kind:'trigger',company:cid,power:'banana',target:m.company});break;
+      case 10: if(g.diceRevision>=156){if(landed&&duringRevealRound(g))trigger={power:'banana',target:landed.company};break;}for(const m of other.filter(m=>m.before<=c.position&&m.after>c.position))steps.push({kind:'trigger',company:cid,power:'banana',target:m.company});break;
       case 22: if(own&&own.after!==own.before&&g.companies.some(x=>x.id!==cid&&x.position===own.after)){const player=controller(g,cid);if(player!==null)steps.push({kind:'landingCash',company:cid,player});}break;
       case 23: if(own&&own.after!==own.before){const ahead=g.companies.filter(x=>x.id!==cid&&x.position===c.position+1);if(ahead.length===1)trigger={power:'swapAhead',target:ahead[0].id};}break;
       case 25: if(own&&!own.noEmptyBonus&&own.after!==own.before&&c.position<Math.max(...g.companies.map(x=>x.position))&&!g.companies.some(x=>x.id!==cid&&x.position===own.after))trigger={power:'empty'};break;
@@ -76,7 +76,9 @@ function applyMoves(g,actions) {
   const cp=g.rules.checkpoints.at(-1),moves=[];
   for(const a of actions) {
     const c=g.companies[a.company],before=c.position;
-    const destination=blockedDestination(g.companies,c.id,before,Math.max(0,Math.min(cp,a.destination ?? (before+a.amount))),a.destination!==undefined,cp);
+    const floor=g.diceRevision>=156?1:0;
+    const lizaBonus=g.diceRevision>=156&&a.destination===undefined&&a.amount>0&&c.founder===8&&!c.down&&!c.hiringFumble&&g.companies.some(other=>other.position>before)?1:0;
+    const destination=Math.max(floor,blockedDestination(g.companies,c.id,before,Math.max(floor,Math.min(cp,a.destination ?? (before+a.amount+lizaBonus))),a.destination!==undefined,cp));
     c.position=destination;
     moves.push({company:c.id,before,after:c.position,source:a.source,noEmptyBonus:a.noEmptyBonus});
     if(!g.forecast&&a.intel&&before!==c.position)g.race.log.push({company:c.id,founder:-1,text:`${c.id}: ${before} → ${c.position}`,intel:true,intelPlayer:g.race.intelContext?.player,intelKind:g.race.intelContext?.kind});
@@ -197,11 +199,11 @@ function step(g,a,base) {
       break;
     }
     case 'julieOffer': {
-      const owner=controller(g,c.id);
-      if(c.founder!==16||owner===null||(g.players[owner]?.cash??0)<2||c.down||c.hiringFumble||(g.julieUsed??[]).includes(c.id)||r.card.kind!=='growth'||r.card.company===c.id||controller(g,c.id)===null)break;
+      const owner=controller(g,c.id),cost=g.diceRevision>=156?1:2,component=g.diceRevision>=156?'die':'token';
+      if(c.founder!==16||owner===null||(g.players[owner]?.cash??0)<cost||c.down||c.hiringFumble||(g.julieUsed??[]).includes(c.id)||r.card.kind!=='growth'||r.card.company===c.id||(!(g.diceRevision>=156)&&controller(g,c.id)===null))break;
       const target=g.companies[r.card.company];
       r.event={type:'reveal',card:g.forecast?r.card:copy(r.card),positions:[...r.startPositions],pending:true,effect:{before:target.position,after:target.position}};
-      offer(g,c.id,'Pay $2 to use this token for my company?',[option('Pay $2 and use token',{kind:'payFounder',company:c.id,player:owner,amount:2},{kind:'adoptGrowth',company:c.id})]);
+      offer(g,c.id,`Pay $${cost} to use this ${component} for my company?`,[option(`Pay $${cost} and use ${component}`,{kind:'payFounder',company:c.id,player:owner,amount:cost},{kind:'adoptGrowth',company:c.id})]);
       break;
     }
     case 'payFounder': {
@@ -244,7 +246,7 @@ function step(g,a,base) {
 
       r.skipped=regular&&!!c.down&&r.card.signature!=="recover";
       const leading=c.position===Math.max(...g.companies.map(x=>x.position));
-      let modifier=regular&&(!c.down||r.card.signature==="recover")&&!c.hiringFumble&&c.founder===8&&!leading?1:0;
+      let modifier=regular&&(!c.down||r.card.signature==="recover")&&!c.hiringFumble&&c.founder===8&&!leading&&(g.diceRevision<156||r.card.printed>0)?1:0;
       r.bonus=modifier;
       r.revealed=true;
       r.event=base(g,{...r.card,company:c.id});

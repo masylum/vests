@@ -2,7 +2,7 @@ import test from 'node:test';import assert from 'node:assert/strict';
 import {createDiceGame,diceCommand,diceObservation,currentPlayer,valueChoices,assertDiceGame,DICE_VALUES,FOUNDERS,shareLeader} from '../src/live-dice-engine.js';
 import {diceBot} from '../src/live-dice-bots.js';import {simulateLiveDice} from '../scripts/live-dice-simulate.js';
 const step=g=>{let id=currentPlayer(g),cmd=diceBot(diceObservation(g,id),id,'balanced',{supportPolicy:'legacy'});diceCommand(g,id,cmd);return cmd;};
-function fixture(kind){const g=createDiceGame({seed:41});while(g.round===0)step(g);g.first=0;g.flowActor=3;g.active=0;g.queue=[0];g.phase='flowAction';
+function fixture(kind,revision=155){const g=createDiceGame({seed:41,revision});while(g.round===0)step(g);g.first=0;g.flowActor=3;g.active=0;g.queue=[0];g.phase='flowAction';g.turnPart='support';
  for(const c of g.companies){c.position=10+c.id;c.down=false;c.hiringFumble=false;c.tokens.push({id:100+c.id,owner:0,paid:0});c.tokens.push({id:200+c.id,owner:1,paid:0});c.lastBuy[0]=++g.serial;}
  g.companies[g.dealRow[0].company].lastBuy[1]=++g.serial;g.companies[0].down=true;g.players[0].capital=1;g.players[0].capitalCalled=20;
  let cards=[...g.intelDeck,...g.players.flatMap(p=>p.intel)],wanted=cards.find(c=>c.kind===kind),index=g.players[0].intel.findIndex(c=>c.kind===kind);
@@ -54,5 +54,53 @@ test('Dan converts a fumble into exactly one space in v145',async()=>{
 test('Convertible Notes draws two row cards; Board Coup discards its matching card without fumbling or dice',()=>{
  for(const kind of ['public','coup']){const {g,card}=fixture(kind);diceCommand(g,0,{type:'valueAction'});const cmd=valueChoices(g,0).find(c=>c.card===card),old=g.dealRow[cmd.deal],rowLength=g.dealRow.length,deckLength=g.dealDeck.length,auctions=g.auctionHistory.length,pending=g.pendingGrowth.length,down=g.companies[cmd.company].down;
  diceCommand(g,0,cmd);assert.ok(g.dealSpent.some(c=>c.id===old.id));assert.equal(g.dealRow.length,rowLength+(kind==='public'?1:-1));assert.equal(g.dealDeck.length,deckLength-(kind==='public'?2:0));assert.equal(g.auctionHistory.length,auctions);assert.equal(g.pendingGrowth.length,pending);if(kind==='coup'){assert.equal(shareLeader(g.companies[cmd.company]),0);assert.equal(g.companies[cmd.company].down,down);}
+ }
+});
+
+test('fundraising and the dice choice precede the auction caller’s support action',()=>{
+ const g=createDiceGame({seed:41});
+ while(g.round===0)step(g);
+ const caller=currentPlayer(g);
+ assert.equal(g.phase,'pickFlow');
+ assert.throws(()=>diceCommand(g,caller,{type:'raiseMoney'}),/fundraise/);
+ diceCommand(g,caller,{type:'call',deal:0,company:g.dealRow[0].company});
+ while(g.phase==='bid'){
+  const id=currentPlayer(g);
+  diceCommand(g,id,{type:'bid',amount:id===caller?g.auction.reserve:0});
+ }
+ assert.equal(g.phase,'auctionResult');
+ diceCommand(g,currentPlayer(g),{type:'continue'});
+ assert.equal(g.phase,'chooseDice');
+ diceCommand(g,currentPlayer(g),{type:'chooseDice',dice:['bland','mild']});
+ assert.equal(g.phase,'flowAction');
+ assert.equal(currentPlayer(g),caller);
+ diceCommand(g,caller,{type:'passAction'});
+ assert.equal(g.phase,'pickFlow');
+ assert.notEqual(currentPlayer(g),caller);
+});
+
+test('current Dice card revisions settle their effects and respect space 1',()=>{
+ for(const kind of ['advisor','underwritten','smear','consolidation','conflict','dividend','restructure','sweat']){
+  const {g,card}=fixture(kind,156);
+  for(const c of g.companies)c.position=2;
+  diceCommand(g,0,{type:'valueAction'});
+  const cmd=valueChoices(g,0).find(c=>c.card===card);
+  assert.ok(cmd,kind);
+  const shareTotal=g.companies.reduce((n,c)=>n+c.tokens.length,0),cash=g.players[0].cash;
+  const spent=g.dealSpent[cmd.spent],start=g.log.length;
+  diceCommand(g,0,cmd);
+  for(let i=0;g.phase!=='valueResult'&&i<100;i++)step(g);
+  assert.equal(g.phase,'valueResult',kind);
+  assert.ok(g.companies.every(c=>c.position>=1),kind);
+  if(kind==='advisor')assert.equal(g.dealDeck.at(-1).id,spent.id);
+  if(kind==='underwritten'){
+   assert.equal(g.players[0].cash,cash+6);
+   assert.equal(g.companies.reduce((n,c)=>n+c.tokens.length,0),shareTotal-1);
+  }
+  if(kind==='consolidation'){
+   assert.equal(g.players[0].capitalCalled,0);
+   assert.equal(g.companies.reduce((n,c)=>n+c.tokens.length,0),shareTotal-2);
+  }
+  if(kind==='smear')assert.equal(g.log.slice(start).filter(e=>e.type==='die'&&e.source==='smear').length,2);
  }
 });

@@ -37,15 +37,12 @@
  .live-dice-app #app>.top nav{grid-column:1 / -1;justify-content:flex-end}
  .live-dice-app #app>.top nav button{white-space:nowrap;padding:6px 10px}
 }
-.mild-dice-app #app .dice-decision{display:grid;grid-template-columns:250px minmax(0,1fr);grid-template-rows:1fr auto;column-gap:20px;padding:12px 16px}
-.mild-dice-app #app .deal-hand{grid-column:1;grid-row:1/span 2;display:block;align-self:stretch;border-right:1px solid #bcb5a5;padding-right:16px}
-.mild-dice-app #app .deal-hand h3{font-size:14px;margin:0 0 10px}
-.mild-dice-app #app .deal-groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.mild-dice-app #app .deal-hand button{font-size:12px;white-space:normal;opacity:1}
-.mild-dice-app #app .deal-hand button:disabled{color:#514d40}
-.mild-dice-app #app .decision-content{grid-column:2;grid-row:1;min-height:0}
-.mild-dice-app #app .decision-actions{grid-column:2;grid-row:2}
-.mild-dice-app #app .deal-hand button{min-height:32px}
+.mild-dice-app #app .dice-decision { display:grid; grid-template-columns:minmax(0,1fr); grid-template-rows:1fr auto; padding:12px 16px; }
+.mild-dice-app #app .decision-content { grid-row:1; min-height:0; }
+.mild-dice-app #app .decision-actions { grid-row:2; }
+.mild-dice-app #app .deal-hand h3 { font-size:14px; }
+.mild-dice-app #app .deal-hand button { font-size:12px; min-height:32px; opacity:1; }
+.mild-dice-app #app .deal-hand button:disabled { color:#514d40; }
 .mild-dice-app #app .decision-content{overflow:visible}
 .mild-dice-app #app .reaction-timeline{margin:4px 0;padding:0;list-style:none}
 .mild-dice-app #app .reaction-timeline>li{display:flex;gap:12px;align-items:center;min-height:88px}
@@ -55,9 +52,6 @@
 .effect-pages{display:flex;align-items:center;justify-content:center;gap:12px}
 .effect-pages button{padding:3px 8px;font-size:12px}
 .mild-dice-app #app .value-receipt{display:flex;gap:12px;align-items:center}
-.mild-dice-app #app .value-receipt>.intel-card{width:65px;height:91px;min-height:91px;flex:none}
-.mild-dice-app #app .value-receipt>.intel-card p{display:none}
-.mild-dice-app #app .value-receipt>.intel-card h3{font-size:9px}
 .dice-dialog .history-event{height:340px;display:flex;flex-direction:column;justify-content:center;gap:12px}
 .dice-dialog .history-event .reaction-timeline{list-style:none;padding:0;margin:0}
 .dice-dialog .history-event .reaction-timeline>li{display:flex;gap:20px;align-items:center}
@@ -73,12 +67,12 @@
 .mild-dice-app #app .roll-result h2{margin:0;font-size:17px}
 .mild-dice-app #app .roll-result p{font-size:12px;margin:4px 0}
 .mild-dice-app #app .decision .reaction-timeline>li{min-height:96px;height:auto;padding:5px;grid-template-columns:none;box-sizing:border-box}
-.mild-dice-app #app .decision .reaction-timeline :is(.founder-card,.intel-card){width:60px!important;height:84px!important;min-height:84px!important;max-height:84px;flex:0 0 60px;transform:none;padding:3px;box-sizing:border-box}
+.mild-dice-app #app .decision .reaction-timeline :is(.founder-card,.intel-card){width:104px;height:145.6px;min-height:145.6px;max-height:145.6px;flex:0 0 104px;transform:none;padding:3px;box-sizing:border-box}
 .mild-dice-app #app .decision .reaction-timeline :is(.founder-face,.value-art){height:42px!important;min-height:42px!important;max-height:42px!important;width:100%}
-.mild-dice-app #app .decision .reaction-timeline :is(.founder-copy p,.intel-card p){display:none!important}
+.mild-dice-app #app .decision .reaction-timeline :is(.founder-copy p,.intel-card p){display:block;font-size:10px;line-height:1.15;overflow:visible;-webkit-line-clamp:unset}
 .mild-dice-app #app .decision .reaction-timeline :is(.founder-copy small,.intel-card h3){font-size:9px;line-height:10px}
 .mild-dice-app #app .decision .reaction-timeline .effect-results{padding:0}
-.mild-dice-app #app .dice-decision{height:220px;min-height:220px;max-height:220px;flex-basis:220px}
+.mild-dice-app #app .dice-decision{height:232px;min-height:232px;max-height:232px;flex-basis:232px}
 .mild-dice-app #app .value-receipt{width:100%}
 .mild-dice-app #app .value-receipt>div{flex:1;min-width:0}
 .mild-dice-app #app .decision .effect-results{display:flex;align-items:center;gap:12px}
@@ -130,11 +124,22 @@
 .mild-dice-app #app .decision .value-selection p{font-size:14px;margin:5px 0 10px}
 .mild-dice-app #app .decision .founder-options{overflow:visible;max-height:none;min-height:0;padding:0;flex-wrap:nowrap}
 .mild-dice-app #app .decision .founder-options>article{flex-direction:row;justify-content:flex-start;align-items:center;height:120px;overflow:visible}
-.mild-dice-app .visual-die{display:inline-grid;grid-template:repeat(3,1fr)/repeat(3,1fr);gap:3px;width:38px;height:38px;padding:7px;box-sizing:border-box;border:2px solid #183b58;border-radius:8px;background:#8dc9ed;color:#17334d;vertical-align:middle;box-shadow:0 2px 0 #183b5833}
-.mild-dice-app .visual-die.mild{background:#ffe16a;border-color:#826615;color:#4c3b0a}
-.mild-dice-app .visual-die i{display:block;border-radius:50%}.mild-dice-app .visual-die .pip{background:currentColor}
-.mild-dice-app .visual-die b{grid-area:1/1/4/4;align-self:center;justify-self:center;font-size:26px;line-height:1}
-.mild-dice-app .visual-die .zero-face{font-size:20px}
+.mild-dice-app .visual-die {
+  display:inline-grid;
+  place-items:center;
+  width:25px;
+  height:25px;
+  box-sizing:border-box;
+  border:2px solid #183b58;
+  border-radius:5px;
+  background:#8dc9ed;
+  color:#17334d;
+  font-size:15px;
+  font-weight:800;
+  vertical-align:middle;
+  box-shadow:0 2px 0 #183b5833;
+}
+.mild-dice-app .visual-die.mild { background:#ffe16a; border-color:#826615; color:#4c3b0a; }
 .mild-dice-app .queued-die{opacity:.45}.mild-dice-app .queued-die.next-die{opacity:1}
 .mild-dice-app .fund-token,.mild-dice-app #app .company .lead-token:not(.empty){display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;width:30px;height:30px;flex:0 0 30px;padding:5px;border:2px solid var(--fund-color);border-radius:50%;background:#fff;color:var(--fund-color);vertical-align:middle}
 .mild-dice-app .fund-token .investor-icon,.mild-dice-app #app .company .lead-token .investor-icon{width:100%;height:100%;max-width:100%;max-height:100%;margin:0;transform:none}
@@ -148,7 +153,6 @@
 .mild-dice-app #app .decision .value-targets label{display:flex;gap:7px;align-items:center;font-size:13px}
 .mild-dice-app #app .decision .value-targets select{font-size:13px;padding:5px;max-width:240px}
 .mild-dice-app #app .decision.settlement-drawer{grid-template-columns:minmax(0,1fr)}
-.mild-dice-app #app .settlement-drawer .deal-hand{display:none}
 .mild-dice-app #app .settlement-drawer .decision-content{grid-column:1}
 .mild-dice-app #app .settlement-drawer .score-grid{display:flex;gap:8px;margin:4px 0}
 .mild-dice-app #app .settlement-drawer .score-grid button{flex:1;display:flex;gap:7px;align-items:center;justify-content:center;font-size:12px;padding:4px}
@@ -209,3 +213,51 @@
 .mild-dice-app #app .game-layout .company .company-counts>div { padding:6px 9px; }
 .mild-dice-app #app .game-layout .company-counts dt { white-space:nowrap; }
 .mild-dice-app #app .game-layout .company-counts dd { font-size:16px; }
+
+.mild-dice-app #app > .deal-hand {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:0;
+  padding:0 8px;
+  gap:10px;
+}
+.mild-dice-app #app .deal-hand h3 { margin:0; white-space:nowrap; }
+.mild-dice-app #app .deal-groups {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  min-width:0;
+  overflow-x:auto;
+}
+.mild-dice-app #app .deal-hand button { flex:0 0 auto; white-space:nowrap; padding:3px 10px; }
+.mild-dice-app .roll-heading { display:flex; align-items:center; gap:8px; }
+.mild-dice-app .die-count { font-size:12px; font-weight:500; }
+.mild-dice-app #app .decision-actions button.primary {
+  background:#315f52;
+  color:white;
+  border-color:#315f52;
+}
+.mild-dice-app #app .auction-receipt .bids article[style] {
+  border-color:var(--fund-color);
+  color:color-mix(in srgb,var(--fund-color) 65%,black);
+}
+.mild-dice-app #app .auction-receipt .bids article.won[style] {
+  background:color-mix(in srgb,var(--fund-color) 20%,white);
+}
+.mild-dice-app #app .auction-receipt .bids article span { display:flex; align-items:center; gap:6px; font-weight:800; }
+.mild-dice-app #app .auction-receipt .bids .fund-token { width:22px; height:22px; flex-basis:22px; padding:3px; }
+.mild-dice-app #app .value-receipt { align-items:flex-start; }
+.mild-dice-app #app .value-receipt > .intel-card {
+  flex:0 0 108px;
+  width:108px;
+  height:151.2px;
+  min-height:151.2px;
+  aspect-ratio:5/7;
+  box-sizing:border-box;
+}
+.mild-dice-app #app .value-receipt > .intel-card .value-art { height:43px; min-height:43px; }
+.mild-dice-app #app .value-receipt > .intel-card p { display:block; font-size:11px; line-height:1.13; overflow:visible; -webkit-line-clamp:unset; }
+.mild-dice-app #app .value-receipt > .intel-card h3 { font-size:12px; }
+.mild-dice-app #app .value-resolution { flex:1; min-width:0; }
+.mild-dice-app #app .decision .value-resolution .reaction-timeline .intel-card { display:none; }

@@ -1,7 +1,13 @@
-# Current dice rules — v145
+# Dice rules · v156
 
-[Play](http://localhost:5188/?variant=dice) · [Full v145 rules](dice-values-v145/rules.md) · [Previous v144](http://localhost:5188/?variant=dice-v144)
+[Play Vests](http://localhost:5188/) and open **Rules**, **Founders**, or **Value cards** for the live rules and card text.
 
-Three private starting value cards; one copy of every value; play and draw a replacement, discarding to the bottom. Eight deal-flow cards per company; N+1 public row; support before fundraising; one bank-funded leftover. End after a company reaches 24 or the seventh full round, resolving the full reveal and catch-up before diluted payouts. Dan moves 1 instead. All values restored with the revisions documented above.
+Each investor starts with an opening share, one opening die, three private value cards, and $20 of repayable capital. The finite deck has eight deal-flow cards per company. Show five cards each round, or as many as remain.
 
-The [v144 study](dice-private-v144/run-01/report.html) is historical and does not describe these rules. v145 has card-specific tests, classic regression tests and full-game replay execution checks; no new balance report is claimed.
+On your turn, pick a public card and hold its auction first. The buyer chooses two dice for the round reveal. Then take a support action: call capital, hire a founder, play a value card, or pass. If no public cards remain on your turn, go directly to support. The bank rolls two bland dice for each card left after the last turn, without issuing shares.
+
+Reveal dice one at a time. A fumbled company discards its next die to recover. Resolve founder reactions before the next die. Companies cannot move below space 1. After the reveal, all companies tied for last move one space. The game ends after the round in which a company reaches 24, or after the final deal-flow row and its reveal.
+
+The default exit pays $1 per share at space 5 and rises to $20 per share at 24. Secret investment bonuses apply at exit. Called capital is deducted from the final score. The New game dialog also offers dilution payouts.
+
+Earlier balance reports describe the rules version named in their titles.
