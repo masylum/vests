@@ -1,5 +1,5 @@
 import {companyValue,raceRank} from './config.js';
-export const LIVE_DICE_VERSION = '156-fundraise-first';
+export const LIVE_DICE_VERSION = '157-immediate-rolls';
 export const DICE = Object.freeze({
   bland: Object.freeze([0, 1, 1, 1, 2, 2]),
   mild: Object.freeze(['x', 0, 1, 2, 2, 3]),

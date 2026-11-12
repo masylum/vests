@@ -57,7 +57,7 @@ test('Convertible Notes draws two row cards; Board Coup discards its matching ca
  }
 });
 
-test('fundraising and the dice choice precede the auction caller’s support action',()=>{
+test('fundraising and both rolls precede the auction caller’s support action',()=>{
  const g=createDiceGame({seed:41});
  while(g.round===0)step(g);
  const caller=currentPlayer(g);
@@ -72,6 +72,15 @@ test('fundraising and the dice choice precede the auction caller’s support act
  diceCommand(g,currentPlayer(g),{type:'continue'});
  assert.equal(g.phase,'chooseDice');
  diceCommand(g,currentPlayer(g),{type:'chooseDice',dice:['bland','mild']});
+ for(let die=1;die<=2;die++){
+  assert.equal(g.phase,'flowRoll');
+  assert.equal(g.flowStage,'auctionDice');
+  diceCommand(g,currentPlayer(g),{type:'roll'});
+  for(let n=0;g.phase==='power'&&n<50;n++)step(g);
+  assert.equal(g.phase,'flowReceipt');
+  assert.equal(g.lastRoll.ordinal,die);
+  diceCommand(g,currentPlayer(g),{type:'continue'});
+ }
  assert.equal(g.phase,'flowAction');
  assert.equal(currentPlayer(g),caller);
  diceCommand(g,caller,{type:'passAction'});

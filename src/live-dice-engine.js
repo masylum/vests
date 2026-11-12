@@ -7,6 +7,7 @@ import {ACTIVE_FOUNDERS,FOUNDERS as BASE_FOUNDERS} from './config.js';
 import {INTEL_CARDS as BASE_INTEL_CARDS,intelDeck} from './intel.js';
 import {LIVE_DICE_VERSION,DEAL_COPIES,LEG_ENDS,secretBonusDeck,secretBonusPerShare,investorSharePrice,diceCompanyValue,diceSharePrice,exitPrice,shareExitPrice,rollDie,validateDice} from './live-dice-rules.js';
 
+const versions={155:'155-five-card-flow',156:'156-fundraise-first',157:LIVE_DICE_VERSION};
 const check=(ok,message)=>{if(!ok)throw Error(message);};
 const event=(g,e)=>g.log.push({round:g.round,leg:g.leg,turn:g.turnNumber,...structuredClone(e)});
 const turn=(g,phase,id=g.first)=>{g.phase=phase;g.active=id;g.queue=[id];};
@@ -38,7 +39,8 @@ INTEL_CARDS.advice={...INTEL_CARDS.advice,name:'Wasteful Advice'};
 INTEL_CARDS.restructure={...INTEL_CARDS.restructure,name:'Illicit Capital'};
 const founderOverrides={24:'When a company sharing my space moves, I move with it.',4:'At game end, if I finish second to last, my company may exit for $16 per share.',8:'When I move forward, I move 1 extra space unless I am leading.',10:'Once per reveal, when another company lands on my space, that company fumbles and I move 1 space.',9:'Once per reveal, when another company fumbles, I may recover it and roll one bland die for my company.',14:'Before the reveal, I roll one mild die.',16:'Once per reveal, I may pay $1 to redirect a revealed die to my company.',21:'Once per reveal, return a spent deal-flow card to the top of the deck, then move that company back 2.'};
 const founderCopy=text=>text.replace(/numbered growth (?:token|card) is revealed/gi,'dice reveal has numbers').replace(/growth (?:token|card) is revealed/gi,'dice are revealed');
-const FOUNDERS=BASE_FOUNDERS.map(f=>{if(founderOverrides[BASE_FOUNDERS.indexOf(f)])return {...f,trigger:'',action:founderOverrides[BASE_FOUNDERS.indexOf(f)],text:founderOverrides[BASE_FOUNDERS.indexOf(f)]};const trigger=founderCopy(f.trigger),action=founderCopy(f.action);if(f.id===11||BASE_FOUNDERS.indexOf(f)===11)return {...f,trigger,action:action.replace('2','1'),text:`${trigger}: ${action.replace('2','1')}`};return {...f,trigger,action,text:`${trigger}: ${action}`};});
+const roundTiming=text=>text.replace(/before the reveal/gi,'At the end of the round').replace(/once per reveal/gi,'Once per round').replace(/after the reveal/gi,'At the end of the round');
+const FOUNDERS=BASE_FOUNDERS.map(f=>{if(founderOverrides[BASE_FOUNDERS.indexOf(f)])return {...f,trigger:'',action:roundTiming(founderOverrides[BASE_FOUNDERS.indexOf(f)]),text:roundTiming(founderOverrides[BASE_FOUNDERS.indexOf(f)])};const trigger=roundTiming(founderCopy(f.trigger)),action=roundTiming(founderCopy(f.action));if(f.id===11||BASE_FOUNDERS.indexOf(f)===11)return {...f,trigger,action:action.replace('2','1'),text:`${trigger}: ${action.replace('2','1')}`};return {...f,trigger,action,text:`${trigger}: ${action}`};});
 
 function resetWindow(g){
  g.revealMovement=Array(g.companies.length).fill(0);g.revealMoved=Array(g.companies.length).fill(false);g.intelMovementStarted=false;
@@ -72,9 +74,18 @@ function startReveal(g){
  event(g,{type:'roundRevealStart',pending:g.pendingGrowth.filter(e=>!e.resolved).map(e=>({company:e.company,player:e.player,dice:e.dice}))});
  resolveRevealPhase(g,'start',true);afterEffects(g);
 }
+function queueRoll(g,entry,stage){
+ g.windowEntry=entry.id;g.rollActor=entry.player;g.flowStage=stage;
+ turn(g,'flowRoll',entry.player);
+}
 function nextReveal(g){
  const entry=g.pendingGrowth.find(e=>!e.resolved);
- if(entry){g.windowEntry=entry.id;g.rollActor=entry.player;g.flowStage='roundDice';turn(g,'flowRoll',entry.player);return;}
+ if(entry){queueRoll(g,entry,'roundDice');return;}
+ if(g.diceRevision>=157&&g.flowStage!=='roundStart'){
+  delete g.windowEntry;g.flowStage='roundStart';
+  event(g,{type:'roundFounderStart'});
+  resolveRevealPhase(g,'start',true);afterEffects(g);return;
+ }
  delete g.windowEntry;g.flowStage='roundEnd';resolveRevealPhase(g,'end',true);afterEffects(g);
 }
 function afterEffects(g){
@@ -82,7 +93,7 @@ function afterEffects(g){
  if(g.flowStage==='roundStart')nextReveal(g);
  else if(g.flowStage==='roundEnd'){g.flowStage='roundCatchUp';resolveRevealPhase(g,'catchUp',true);afterEffects(g);}
  else if(g.flowStage==='roundCatchUp')finishRound(g);
- else if(['roundDice','setup'].includes(g.flowStage)){
+ else if(['roundDice','auctionDice','setup'].includes(g.flowStage)){
   g.lastRoll.reactions.push(...(g.lastRevealed?.reactions??[]));
   if(g.revealQueue?.length)resolveNextFace(g);else turn(g,'flowReceipt',g.rollActor);
  }
@@ -106,6 +117,11 @@ function finishRoll(g){
   const next=nextGrowthPlayer(g,g.rollActor);
   if(next!==null)turn(g,'flowRoll',next);else finishSetup(g);
   return;
+ }
+ if(g.flowStage==='auctionDice'){
+  const entry=g.pendingGrowth.find(e=>e.id===g.windowEntry);
+  if(!entry.resolved){queueRoll(g,entry,'auctionDice');return;}
+  delete g.windowEntry;g.flowStage='action';advanceAction(g);return;
  }
  nextReveal(g);
 }
@@ -138,7 +154,7 @@ function newRound(g){
 }
 function nextTurn(g){
  delete g.auction;delete g.valueResult;delete g.intelOrder;
- if(g.roundActed.length===g.players.length){bankRemainder(g);startReveal(g);return;}
+ if(g.roundActed.length===g.players.length){bankRemainder(g);if(g.diceRevision>=157)nextReveal(g);else startReveal(g);return;}
  g.extraSupport=0;g.weekendUsed=false;g.flowStage='action';const fundingFirst=g.diceRevision>=156&&g.dealRow.length;
  g.turnPart=fundingFirst?'funding':'support';turn(g,fundingFirst?'pickFlow':'flowAction',(g.flowActor+1)%g.players.length);
 }
@@ -147,7 +163,7 @@ function apply(g,id,cmd){
  check(!g.ended&&!g.stalled&&currentPlayer(g)===id,'Another investor must decide.');check(cmd&&typeof cmd.type==='string','Choose a command.');
  if(g.phase==='chooseDice'){
   check(cmd.type==='chooseDice','Choose the dice for this share.');const entry=g.pendingGrowth.find(e=>!e.resolved&&!e.dice);
-  entry.dice=validateDice(cmd.dice,2);if(entry.bonusDice)entry.dice.push(...Array(entry.bonusDice).fill('bland'));event(g,{type:'diceChoice',player:id,company:entry.company,dice:entry.dice});advanceAction(g);return;
+  entry.dice=validateDice(cmd.dice,2);if(entry.bonusDice)entry.dice.push(...Array(entry.bonusDice).fill('bland'));event(g,{type:'diceChoice',player:id,company:entry.company,dice:entry.dice});if(g.diceRevision>=157)queueRoll(g,entry,'auctionDice');else advanceAction(g);return;
  }
  if(g.phase==='flowRoll'){
   check(cmd.type==='roll','Roll the next die.');
@@ -181,7 +197,13 @@ export function diceObservation(g,id){
  for(const p of view.players){p.dealFlowCount=p.dealFlow.length;if(p.id!==id){delete p.dealFlow;if(!g.ended){delete p.cash;delete p.capital;delete p.capitalCalled;delete p.secretBonus;}}}
  if(!g.ended){delete view.bank;view.log=[];}return view;
 }
-export function replayDiceGame(data){check([LIVE_DICE_VERSION,'155-five-card-flow'].includes(data.version),'Load this replay in its original dice version.');const g=createDiceGame({...data.setup,revision:data.version===LIVE_DICE_VERSION?156:155});for(const {id,cmd} of data.commands)diceCommand(g,id,cmd);return g;}
+export function replayDiceGame(data){
+ const revision=Number(Object.keys(versions).find(key=>versions[key]===data.version));
+ check(Number.isInteger(revision),'Load this replay in its original dice version.');
+ const g=createDiceGame({...data.setup,revision});
+ for(const {id,cmd} of data.commands)diceCommand(g,id,cmd);
+ return g;
+}
 export {currentPlayer,pendingFor,holdings,shareLeader,exitPrice,shareExitPrice,FOUNDERS,INTEL_CARDS};
 
 // Rounds count one completed turn per player; legs are independent position gates.
@@ -236,10 +258,10 @@ function playLegacy(g,id,cmd){
  }else legacyCommand(g,id,cmd);
 }
 export function valueChoices(g,id){return previousChoices(g,id);}
-export function createDiceGame({seed=42,players=4,dealCopies=DEAL_COPIES,bankDice=2,distinctRow=false,payoutMode='perShare',perShareMax=20,exitCurve='early5',initialCapital=20,secretBonuses=true,revision=156,daniloStep=revision===155,rowSize=5,roundLimit=null,endOnDeckExhaustion=true}={}){
+export function createDiceGame({seed=42,players=4,dealCopies=DEAL_COPIES,bankDice=2,distinctRow=false,payoutMode='perShare',perShareMax=20,exitCurve='early5',initialCapital=20,secretBonuses=true,revision=157,daniloStep=revision===155,rowSize=5,roundLimit=null,endOnDeckExhaustion=true}={}){
  check(Number.isInteger(dealCopies)&&dealCopies>=1&&dealCopies<=100,'Choose 1–100 cards per company.');
  check(['dilution','perShare'].includes(payoutMode),'Choose dilution or per-share payouts.');
- check([155,156].includes(revision),'Unknown Dice rules revision.');
+ check(Object.hasOwn(versions,revision),'Unknown Dice rules revision.');
  const g=createGame({seed,players,variant:'dice'});g.payoutMode=payoutMode;check([20,21,24].includes(perShareMax),'Choose a $20, $21 or $24 last-space payout.');g.perShareMax=exitCurve==='early5'?20:exitCurve==='early4'?21:perShareMax;
  check(['late','early4','early5'].includes(exitCurve),'Unknown exit curve.');check([0,20].includes(initialCapital),'Initial capital must be $0 or $20.');g.exitCurve=exitCurve;g.initialCapital=initialCapital;g.secretBonuses=!!secretBonuses;g.daniloStep=!!daniloStep;
  check(rowSize===null||Number.isInteger(rowSize)&&rowSize>=players&&rowSize<=12,'Invalid public row size.');check(roundLimit===null||Number.isInteger(roundLimit)&&roundLimit>0,'Invalid round limit.');g.rowSize=rowSize??players+1;g.roundLimit=roundLimit;g.endOnDeckExhaustion=!!endOnDeckExhaustion;
@@ -252,7 +274,7 @@ export function createDiceGame({seed=42,players=4,dealCopies=DEAL_COPIES,bankDic
  for(const p of g.players){p.dealFlow=[];p.actionsTaken=0;p.capital=initialCapital/20;p.capitalCalled=initialCapital;}
  turn(g,'flowRoll');
  check([1,2].includes(bankDice),'Bank rolls one or two dice.');g.bankDice=bankDice;g.distinctRow=!!distinctRow;g.publicFlow=true;g.dealRow=[];g.dealCopies=dealCopies;g.dealDeck=[];g.dealSpent=[];
- g.rules.catchUp=true;g.liveDice=true;g.roundDice=false;g.sharedReveal=true;g.roundFunded=[];g.roundActed=[];g.turnNumber=0;g.publicValues=false;g.diceRevision=revision;g.version=revision===155?'155-five-card-flow':LIVE_DICE_VERSION;g.flowStage='setup';g.leg=0;g.crossedLegs=[];g.dealSerial=0;g.actionsPerRound=null;
+ g.rules.catchUp=true;g.liveDice=true;g.roundDice=false;g.sharedReveal=true;g.roundFunded=[];g.roundActed=[];g.turnNumber=0;g.publicValues=false;g.diceRevision=revision;g.version=versions[revision];g.flowStage='setup';g.leg=0;g.crossedLegs=[];g.dealSerial=0;g.actionsPerRound=null;
  const founders=shuffle(g,[...DICE_FOUNDERS]);for(const c of g.companies)c.founder=founders.shift();
  g.founderMarket=founders.splice(0,4);g.founderSupply=founders;
  g.intelDeck=shuffle(g,intelDeck().filter((c,i,a)=>DICE_VALUES.includes(c.kind)&&a.findIndex(x=>x.kind===c.kind)===i));g.intelDiscard=[];g.valueDeckSize=g.intelDeck.length;g.valueMarket=[];

@@ -26,13 +26,13 @@ function activate(state,company,a,b=undefined){
  const g=structuredClone(state);delete g.forecastOrder;
  const faces=b===undefined?[a]:[a,b];
  for(const face of faces)resolveCard(g,{kind:'growth',company,printed:face==='x'?0:face,signature:false,...(face==='x'?{effect:'fumble'}:{})});
- if(b!==undefined){resolveRevealPhase(g,'end',false);resolveRevealPhase(g,'catchUp',false);}
+ if(b!==undefined&&!(g.diceRevision>=157)){resolveRevealPhase(g,'end',false);resolveRevealPhase(g,'catchUp',false);}
  return g;
 }
 // Numeric zero is a numbered result, distinct from the fumble face.
 export function diceEvaluations(view,id,company,count=2){
  const start=forecast(view);
- if(count===2){start.intelMovementStarted=false;resolveRevealPhase(start,'start',false);}
+ if(count===2&&!(start.diceRevision>=157)){start.intelMovementStarted=false;resolveRevealPhase(start,'start',false);}
  const scores=new Map();
  const score=(a,b)=>{const key=JSON.stringify([a,b]);if(!scores.has(key))scores.set(key,utility(activate(start,company,a,b),id));return scores.get(key);};
  return kinds.flatMap(a=>(count===1?[null]:kinds).map(b=>({dice:b?[a,b]:[a],score:DICE[a].reduce((sum,x)=>sum+(b?DICE[b].reduce((n,y)=>n+score(x,y),0)/6:score(x)),0)/6}))).sort((a,b)=>b.score-a.score);
@@ -48,9 +48,19 @@ export function fundingForecast(view,id,company,{buyer=id,price=0}={}){
   start.companies[company].tokens.push({owner:buyer});
   start.companies[company].lastBuy[buyer]=Math.max(...start.companies.flatMap(c=>c.lastBuy))+1;
   resolveSharePurchase(start,company,buyer,{previousLead,auction:true});
-  start.intelMovementStarted=false;resolveRevealPhase(start,'start',false);
+  if(start.diceRevision>=157){
+   const outcomes=new Map();
+   for(const a of DICE.bland)for(const b of DICE.bland){
+    const key=`${a}/${b}`;
+    if(!outcomes.has(key))outcomes.set(key,{g:activate(start,company,a,b),weight:0});
+    outcomes.get(key).weight+=1/36;
+   }
+   cache.set(key,[...outcomes.values()]);
+  }else{
+   start.intelMovementStarted=false;resolveRevealPhase(start,'start',false);
   const sums=new Map();for(const a of DICE.bland)for(const b of DICE.bland)sums.set(a+b,(sums.get(a+b)??0)+1);
   cache.set(key,[...sums].map(([sum,n])=>({g:activate(start,company,sum,0),weight:n/36})));
+  }
  }
  // Approximation: founder choices are forecast before applying the purchase price.
  // Near a cash boundary this can overestimate an affordable Julie activation.

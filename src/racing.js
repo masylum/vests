@@ -5,7 +5,7 @@ import {blockedDestination,recordArrivals} from './movement.js';
 import {shareCount,shareLeader} from './ownership.js';
 import { companyValue, slotCards, companyOrder } from './config.js';
 import {clone as copy} from './clone.js';
-const duringRevealRound=g=>g.valueDieActive||g.roundDice||duringReveal(g)||['start','end'].includes(g.race?.stage);
+const duringRevealRound=g=>(g.diceRevision>=157&&g.round>0)||g.valueDieActive||g.roundDice||duringReveal(g)||['start','end'].includes(g.race?.stage);
 export const duringReveal=g=>!!g.race&&!g.race.stage&&g.race.card.kind==='growth';
 const held = shareCount;
 const controller = (g,cid) => g.forecast?(g.forecastOwners[cid]??=shareLeader(g.companies[cid])):shareLeader(g.companies[cid]);
@@ -431,7 +431,7 @@ export function resumeRace(g,choice,base) {
 
 export function resolveRevealPhase(g,stage,interactive=false,activeCompany=null) {
   if(g.race)throw Error('Finish the current founder decision first.');
-  if(stage==='start'&&!g.intelMovementStarted){g.revealMovement=g.companies.map(()=>0);g.revealMoved=g.companies.map(()=>false);}
+  if(stage==='start'&&!(g.diceRevision>=157)&&!g.intelMovementStarted){g.revealMovement=g.companies.map(()=>0);g.revealMoved=g.companies.map(()=>false);}
   if(stage==='start'&&!g.roundDice&&!(g.diceRevision>=147)){g.julieUsed=[];g.danUsed=[];g.stefanUsed=[];g.reidUsed=[];}
   g.race={startPositions:g.companies.map(c=>c.position),startArrivalOrders:g.companies.map(c=>c.arrivalOrder),stage,card:{kind:'phase'},revealed:stage==='end',interactive,
     used:(g.founderUsed??=[]),advanced:g.companies.map(()=>0),log:[],
