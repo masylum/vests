@@ -305,3 +305,38 @@
 .mild-dice-app #app .value-receipt > .intel-card h3 { font-size:12px; }
 .mild-dice-app #app .value-resolution { flex:1; min-width:0; }
 .mild-dice-app #app .decision .value-resolution .reaction-timeline .intel-card { display:none; }
+
+.mild-dice-app .die-picker {
+  display:flex;
+  gap:8px;
+  border:1px solid #d0c6b5;
+  border-radius:9px;
+  padding:6px 10px;
+}
+.mild-dice-app .die-picker button[aria-pressed="true"] {
+  border-color:#315f52;
+  box-shadow:inset 0 0 0 1px #315f52;
+  background:#e9f2ed;
+}
+.mild-dice-app .hire-company-picker { display:flex; flex-wrap:wrap; gap:8px; }
+.mild-dice-app .hire-company-picker button,
+.mild-dice-app .round-movement-summary li {
+  --company-ink:color-mix(in srgb,var(--company) 38%,black);
+  border:1px solid var(--company-ink);
+  border-radius:9px;
+  background:color-mix(in srgb,var(--company) 55%,white);
+  color:var(--company-ink);
+}
+.mild-dice-app .round-movement-summary {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+  padding:0;
+  list-style:none;
+}
+.mild-dice-app .round-movement-summary li {
+  display:flex;
+  justify-content:space-between;
+  gap:6px;
+  padding:8px;
+}

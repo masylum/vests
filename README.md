@@ -4,7 +4,7 @@
 
 [Five-card row / finish-only experiment](docs/dice-flow-finish-v154/run-01/report.html): 144 fresh simulations plus72 capped controls; historical experiment (finish-only, without the new deck-exhaustion ending). Reproduce with `node scripts/flow-finish-study.js NEW_DIRECTORY`.
 
-Only classic and current dice are supported. Retired dice URLs open current dice; frozen editions live in `archive/versions` for historical regression/replay evidence and are excluded from production. `npm test` runs only current classic and dice regressions.
+Vests Dice is the supported game. Older game URLs open current Dice; frozen editions live in `archive/versions` for historical regression/replay evidence and are excluded from production. `npm test` runs shared-engine and Dice regressions.
 
 
 Current build **v128** ([changes](docs/v128-rules.md)). Gill Bates may move any one company 1 space before the reveal. Draw up to six growth tokens each round. Working Weekend costs no cash. [Current health report](docs/v128-health/report.html) · [Earlier pacing study](docs/v122-backlog-study/report.html).
