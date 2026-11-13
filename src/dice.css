@@ -319,24 +319,10 @@
   background:#e9f2ed;
 }
 .mild-dice-app .hire-company-picker { display:flex; flex-wrap:wrap; gap:8px; }
-.mild-dice-app .hire-company-picker button,
-.mild-dice-app .round-movement-summary li {
+.mild-dice-app .hire-company-picker button {
   --company-ink:color-mix(in srgb,var(--company) 38%,black);
   border:1px solid var(--company-ink);
   border-radius:9px;
   background:color-mix(in srgb,var(--company) 55%,white);
   color:var(--company-ink);
-}
-.mild-dice-app .round-movement-summary {
-  display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:8px;
-  padding:0;
-  list-style:none;
-}
-.mild-dice-app .round-movement-summary li {
-  display:flex;
-  justify-content:space-between;
-  gap:6px;
-  padding:8px;
 }

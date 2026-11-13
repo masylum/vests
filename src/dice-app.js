@@ -53,7 +53,7 @@ function submit(cmd,confirmed=false){
  hireCompanyPicker=false;dicePicks={};
  pawnMotion.cancel();const oldPawns=[...root.querySelectorAll(".pawn[data-company]")].map(e=>({id:Number(e.dataset.company),rect:e.getBoundingClientRect()}));let steps=[];try{const id=currentPlayer(game),before=game.companies.map(c=>c.position),start=game.log.length;diceCommand(game,id,cmd);const events=game.log.slice(start);steps=movementSteps(events,before,game.companies.map(c=>c.position));if((['raiseMoney','founder','playIntel','power'].includes(cmd.type)||(game.phase==='power'&&(steps.length||cmd.type==='roll')))&&!['phaseResult','flowReceipt','valueResult','auctionResult'].includes(game.phase))receipt={actor:id,cmd,before,after:game.companies.map(c=>c.position),events,reactions:game.phase==='power'?(game.lastRevealed?.reactions??[]):events.flatMap(e=>e.reactions??[])};commands.push({id,cmd});selected=null;handPage=Math.min(handPage,Math.max(0,Math.ceil(game.players[0].intel.length/3)-1));valueChoice=0;valueExtra=0;effectPage=0;growthPage=0;notice='';localStorage.setItem(key,JSON.stringify(replay()));}catch(e){notice=e.message;auto=false;}render();if(steps.length){animating=true;const controls=[...root.querySelectorAll('.decision button:not(:disabled)')];controls.forEach(b=>b.disabled=true);pawnMotion.animatePawns(steps,oldPawns).finally(()=>{animating=false;controls.forEach(b=>{if(b.isConnected)b.disabled=false;});});}}
 function action(cmd){submit({...cmd,deal:selected});}
-const {reactionTimeline,movementTrack}=createTimeline({getGame:()=>game,co:name,esc,cardHTML:c=>`<b>${name(c.company)} · ${c.printed??'×'}</b>`,intelCardHTML,FOUNDERS,founderCard,founderDescription,COMPANIES,fundingBand});
+const {reactionTimeline,movementTrack,positionTrack}=createTimeline({getGame:()=>game,co:name,esc,cardHTML:c=>`<b>${name(c.company)} · ${c.printed??'×'}</b>`,intelCardHTML,FOUNDERS,founderCard,founderDescription,COMPANIES,fundingBand});
 function changesHTML(before,after){const moves=before.flatMap((from,company)=>from!==after[company]?[{company,from,to:after[company]}]:[]);return moves.length?movementTrack(moves):'';}
 function receiptHTML(r){
  const played=r.events.find(e=>e.type==='valueResolved')?.value;
@@ -74,11 +74,11 @@ function choicesHTML(){
  const end=unreviewedRound();
  if(end){
   const start=game.log.findLast(e=>e.type==='roundStart'&&e.round===end.round);
-  const rows=end.positions.map((to,i)=>{
-   const from=start?.positions[i]??to,delta=to-from;
-   return `<li style="--company:${COMPANIES[i].color}"><strong>${name(i)}</strong><span>${from} → ${to}</span><b>${delta>0?'+':''}${delta}</b></li>`;
-  }).join('');
-  return `<h2>Round ${end.round} · company movement</h2><ul class="round-movement-summary">${rows}</ul>${button('Continue','data-review-round')}`;
+  const track=positionTrack([
+   {label:'Before',positions:start?.positions??end.positions},
+   {label:'After',positions:end.positions}
+  ],game.companies.map(c=>c.id),true);
+  return `<h2>Round ${end.round} · company movement</h2>${track}${button('Continue','data-review-round')}`;
  }
  if(game.ended){const a=game.accounts[settlementPlayer];return `<h2>${game.endReason==='roundLimit'?`Round ${game.round} complete`:game.endReason==='deckExhausted'?'Deck exhausted · all-company exit':'All-company exit'} · investment returns</h2><div class="score-grid">${game.accounts.map(x=>`<button data-settlement="${x.player}" class="${x.player===settlementPlayer?'selected':''}">${fundToken(x.player)} ${FUNDS[x.player]} ${game.winners.includes(x.player)?'★':''} <strong>$${game.scores[x.player]}</strong></button>`).join('')}</div><table class="portfolio-return"><thead><tr>${a.companies.map(c=>`<th style="color:${COMPANIES[c.company].color}">${name(c.company)}</th>`).join('')}</tr></thead><tbody><tr>${a.companies.map(c=>`<td><strong>$${c.payout}</strong><small>${c.shares} share${c.shares===1?'':'s'} × $${c.price}</small>${c.bonus?`<small>$${c.basePrice} + $${c.bonus} secret bonus</small>`:''}</td>`).join('')}</tr></tbody></table><p>${a.secretBonus?`Secret investment: ${name(a.secretBonus.plus5)} +$5/share · ${name(a.secretBonus.plus3)} +$3/share`:""}</p><p class="settlement-total">${FUNDS[a.player]}: $${a.cash} cash + $${a.payout} company payouts − $${a.capitalCalled} capital = <b>$${game.scores[a.player]}</b></p>`;}
 
